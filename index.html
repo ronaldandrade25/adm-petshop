@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel • Pet Shop</title>
+
+    <!-- Fontes / Ícones -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <!-- Notificações (toasts) -->
+    <div id="notification-container"></div>
+
+    <!-- Header / Navegação -->
+    <header class="app-header">
+        <nav class="app-nav">
+            <a href="#" class="logo" onclick="return false;">
+                <img src="./assets/ra-petshop.png" alt="Logo do Pet Shop" class="logo-img" />
+                <div class="logo-text">
+                    <span>RA Pet Shop</span>
+                    <small>Painel Administrativo •</small>
+                </div>
+            </a>
+
+            <div class="tabs-in-header">
+                <button type="button" class="tab-btn" data-tab="agenda">
+                    <i class="bx bx-calendar"></i> Agenda
+                </button>
+                <button type="button" class="tab-btn" data-tab="reports">
+                    <i class="bx bx-bar-chart"></i> Relatórios
+                </button>
+                <button type="button" class="tab-btn" data-tab="clientes">
+                    <i class="bx bx-user-pin"></i> Tutores / Clube Pet
+                </button>
+                <button type="button" class="tab-btn" data-tab="pdv">
+                    <i class="bx bx-cart"></i> PDV / Produtos
+                </button>
+                <button type="button" class="tab-btn" data-tab="config">
+                    <i class="bx bx-cog"></i> Configurações
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- MAIN: Agenda -->
+    <main id="agendaMain" class="page-main">
+        <section class="section">
+            <header class="section-header">
+                <h1>Agenda</h1>
+                <p>Visualize e gerencie os horários de atendimento dos pets.</p>
+            </header>
+
+            <div class="toolbar">
+                <div class="field">
+                    <label for="profissionalSelect">Profissional</label>
+                    <select id="profissionalSelect">
+                        <option value="reservas_rodrigotorre2">Rodrigo Torre2</option>
+                    </select>
+                    <small class="muted"></small>
+                </div>
+
+                <div class="field">
+                    <label for="dataFiltro">Data</label>
+                    <input type="date" id="dataFiltro" />
+                </div>
+
+                <div class="field">
+                    <label for="horaFiltro">Hora (opcional)</label>
+                    <select id="horaFiltro">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+
+                <div class="field actions-field">
+                    <label>&nbsp;</label>
+                    <div class="actions">
+                        <button id="buscarBtn" class="btn">
+                            <i class="bx bx-search"></i> Buscar
+                        </button>
+                        <button id="bloquearBtn" class="btn btn-warning">
+                            <i class="bx bx-lock"></i> Bloquear
+                        </button>
+                        <button id="desbloquearBtn" class="btn btn-light">
+                            <i class="bx bx-lock-open"></i> Desbloquear
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Horários do dia</h2>
+                    <button id="openBookingModal" class="btn btn-sm btn-light">
+                        <i class="bx bx-link-external"></i> Abrir página de agendamento
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="agenda-grid" class="agenda-grid"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MAIN: Relatórios -->
+    <main id="reportsMain" class="page-main hidden-block">
+        <section class="section">
+            <header class="section-header">
+                <h1>Relatórios</h1>
+                <p>Resumo de atendimentos, faturamento e Clube Pet.</p>
+            </header>
+
+            <div class="reports-toolbar">
+                <div class="field">
+                    <label for="relProf">Profissional</label>
+                    <select id="relProf">
+                        <option value="todos">Todos os profissionais</option>
+                        <option value="reservas_rodrigotorre2">Rodrigo Torre2</option>
+                    </select>
+                    <small class="muted">* Vai ficar dinâmico no JavaScript.</small>
+                </div>
+
+                <div class="field">
+                    <label for="relDe">De</label>
+                    <input type="date" id="relDe" />
+                </div>
+
+                <div class="field">
+                    <label for="relAte">Até</label>
+                    <input type="date" id="relAte" />
+                </div>
+
+                <div class="field">
+                    <label for="relGrupo">Grupo</label>
+                    <select id="relGrupo">
+                        <option value="todos">Todos</option>
+                        <option value="membros">Clube Pet (membros)</option>
+                        <option value="nao-membros">Cliente avulso</option>
+                    </select>
+                </div>
+
+                <div class="field actions-field">
+                    <label>&nbsp;</label>
+                    <div class="actions">
+                        <button id="relGerarBtn" class="btn btn-edit">
+                            <i class="bx bx-bar-chart"></i> Gerar
+                        </button>
+                        <button id="exportCsv" class="btn">
+                            <i class="bx bx-download"></i> Exportar CSV (Serviços)
+                        </button>
+
+                        <button id="openResumoGeralModal" class="btn btn-light">
+                            <i class="bx bx-receipt"></i> Resumo geral / Despesas
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPIs (serviços) -->
+            <div class="kpis">
+                <div class="kpi">
+                    <span class="kpi-label">Atendimentos</span>
+                    <span id="kpiQtd" class="kpi-value">0</span>
+                </div>
+                <div class="kpi">
+                    <span class="kpi-label">Faturamento</span>
+                    <span id="kpiBruto" class="kpi-value">R$ 0,00</span>
+                </div>
+                <div class="kpi">
+                    <span class="kpi-label">Comissão (40%)</span>
+                    <span id="kpiTicket" class="kpi-value">R$ 0,00</span>
+                </div>
+            </div>
+
+            <div class="reports-layout">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Relatório por atendimento (serviços)</h2>
+                    </div>
+                    <div class="card-body table-wrapper">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Profissional</th>
+                                    <th>Tutor</th>
+                                    <th>Serviço</th>
+                                    <th>Forma</th>
+                                    <th>Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody id="relDetalheTbody">
+                                <tr>
+                                    <td colspan="6" class="loading-row">Gere um relatório para ver os dados.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Faturamento por serviço e profissional</h2>
+                    </div>
+                    <div class="card-body reports-charts">
+                        <div class="report-chart-block">
+                            <h3 class="chart-title-sm">Por serviço</h3>
+                            <canvas id="reportsChart"></canvas>
+                            <div id="reportsChartLegend" class="chart-legend"></div>
+                        </div>
+                        <div class="report-chart-block">
+                            <h3 class="chart-title-sm">Por profissional (qtd. atendimentos)</h3>
+                            <canvas id="reportsProfChart"></canvas>
+                            <div id="reportsProfLegend" class="chart-legend"></div>
+                        </div>
+                        <div class="report-chart-block report-chart-block-full">
+                            <h3 class="chart-title-sm">Clube Pet x Cliente avulso (qtd &amp; valor)</h3>
+                            <canvas id="reportsGrupoChart"></canvas>
+                            <div id="reportsGrupoLegend" class="chart-legend"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vendas de produtos por profissional -->
+            <div class="card card-product-report">
+                <div class="card-header">
+                    <h2>Vendas de produtos por profissional</h2>
+                </div>
+                <div class="card-body table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Profissional</th>
+                                <th>Qtd. produtos vendidos</th>
+                                <th>Total em produtos</th>
+                                <th>Comissão (10%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prodRelTbody">
+                            <tr>
+                                <td colspan="4" class="loading-row">Gere um relatório para ver as vendas de produtos.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ✅✅✅ NOVO (VISÍVEL NA ABA): Resumo geral de gestão -->
+            <div class="card card-management">
+                <div class="card-header">
+                    <h2>Resumo geral de gestão</h2>
+                    <p class="card-subtitle">Entradas (serviços + produtos) e saídas (despesas) no período selecionado.</p>
+                </div>
+
+                <div class="card-body">
+                    <div class="kpis kpis-gestao">
+                        <div class="kpi kpi-gestao">
+                            <span class="kpi-label">Total de atendimentos (serviços)</span>
+                            <span id="mgTotalAppointments" class="kpi-value">0</span>
+                        </div>
+                        <div class="kpi kpi-gestao">
+                            <span class="kpi-label">Faturamento em serviços</span>
+                            <span id="mgServicesRevenue" class="kpi-value">R$ 0,00</span>
+                        </div>
+                        <div class="kpi kpi-gestao">
+                            <span class="kpi-label">Faturamento em produtos</span>
+                            <span id="mgProductsRevenue" class="kpi-value">R$ 0,00</span>
+                        </div>
+                        <div class="kpi kpi-gestao">
+                            <span class="kpi-label">Qtd. total de produtos vendidos</span>
+                            <span id="mgProductsQty" class="kpi-value">0</span>
+                        </div>
+                        <div class="kpi kpi-gestao">
+                            <span class="kpi-label">Faturamento total (serviços + produtos)</span>
+                            <span id="mgOverallRevenue" class="kpi-value">R$ 0,00</span>
+                        </div>
+                        <div class="kpi kpi-gestao">
+                            <span class="kpi-label">Total de saídas (despesas)</span>
+                            <span id="mgExpensesTotal" class="kpi-value">R$ 0,00</span>
+                        </div>
+                        <div class="kpi kpi-gestao">
+                            <span class="kpi-label">Resultado líquido (entradas - saídas)</span>
+                            <span id="mgNetResult" class="kpi-value">R$ 0,00</span>
+                        </div>
+                    </div>
+
+                    <div class="management-subsection" style="margin-top:16px;">
+                        <h3 class="chart-title-sm">Totais por forma de pagamento</h3>
+                        <div class="table-wrapper">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Forma de pagamento</th>
+                                        <th>Serviços</th>
+                                        <th>Produtos</th>
+                                        <th>Total geral</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mgPaySummaryTbody">
+                                    <tr>
+                                        <td colspan="4" class="loading-row">Gere um relatório para ver o resumo.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ✅✅✅ NOVO (VISÍVEL NA ABA): Saídas / Despesas -->
+            <div class="card card-expenses" style="margin-top:14px;">
+                <div class="card-header">
+                    <h2>Saídas / Despesas</h2>
+                    <p class="card-subtitle">Registre despesas e visualize o período selecionado em Relatórios.</p>
+                </div>
+
+                <div class="card-body">
+                    <form id="expenseForm" class="form-grid expense-form">
+                        <div class="form-row">
+                            <div class="field">
+                                <label for="expenseDate">Data</label>
+                                <input type="date" id="expenseDate" />
+                            </div>
+                            <div class="field">
+                                <label for="expenseDesc">Descrição</label>
+                                <input type="text" id="expenseDesc" placeholder="Ex.: aluguel, ração, produtos de higiene, materiais..." />
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="field">
+                                <label for="expenseCategory">Categoria</label>
+                                <select id="expenseCategory">
+                                    <option value="">Selecione</option>
+                                    <option value="Aluguel">Aluguel</option>
+                                    <option value="Contas fixas">Contas fixas</option>
+                                    <option value="Produtos / insumos">Produtos / insumos</option>
+                                    <option value="Folha / comissões">Folha / comissões</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Outros">Outros</option>
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label for="expenseMethod">Forma de pagamento</label>
+                                <select id="expenseMethod">
+                                    <option value="">Selecione</option>
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label for="expenseValue">Valor (R$)</label>
+                                <input type="number" step="0.01" id="expenseValue" />
+                            </div>
+
+                            <div class="field">
+                                <label>&nbsp;</label>
+                                <button type="submit" class="btn btn-edit btn-expense-save">
+                                    <i class="bx bx-minus-circle"></i> Registrar saída
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="table-wrapper" style="margin-top:12px;">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Descrição</th>
+                                    <th>Categoria</th>
+                                    <th>Forma</th>
+                                    <th>Valor</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expenseTableBody">
+                                <tr>
+                                    <td colspan="6" class="loading-row">
+                                        Nenhuma saída carregada. Gere um relatório para ver o período.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <small class="muted" style="display:block;margin-top:10px;">
+                        Dica: gere o relatório (De/Até) para atualizar o resumo geral e o período de despesas.
+                    </small>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MAIN: Clientes / RA Club -->
+    <main id="clientesMain" class="page-main hidden-block">
+        <section class="section">
+            <header class="section-header">
+                <h1>Tutores / Clube Pet</h1>
+                <p>Cadastre tutores, membros do plano e acompanhe pagamentos.</p>
+            </header>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Cadastro de tutor</h2>
+                </div>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="cliNome">Nome</label>
+                            <input id="cliNome" placeholder="Nome do tutor" />
+                        </div>
+                        <div class="field">
+                            <label for="cliSobrenome">Pet</label>
+                            <input id="cliSobrenome" placeholder="Nome do pet" />
+                        </div>
+                        <div class="field">
+                            <label for="cliTelefone">Telefone</label>
+                            <input id="cliTelefone" placeholder="(00) 00000-0000" />
+                        </div>
+                        <div class="field">
+                            <label for="cliRaclub">Clube Pet</label>
+                            <select id="cliRaclub">
+                                <option value="nao">Não é membro</option>
+                                <option value="membro">Membro</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                        <button id="cliSalvarBtn" class="btn btn-edit"><i class="bx bx-save"></i> Salvar</button>
+                        <button id="cliLimparBtn" class="btn btn-light"><i class="bx bx-eraser"></i> Limpar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:14px;">
+                <div class="card-header">
+                    <h2>Lista de tutores</h2>
+                </div>
+                <div class="card-body table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Tutor</th>
+                                <th>Telefone</th>
+                                <th>Clube Pet</th>
+                                <th style="width:120px;text-align:right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientesTbody">
+                            <tr>
+                                <td colspan="4" class="loading-row">Carregando tutores...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:14px;">
+                <div class="card-header">
+                    <h2>Pagamentos (Clube Pet)</h2>
+                </div>
+                <div class="card-body table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Tutor</th>
+                                <th>Mês</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="raclubPayTbody">
+                            <tr>
+                                <td colspan="4" class="loading-row">Sem pagamentos para exibir.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MAIN: PDV / Produtos -->
+    <main id="pdvMain" class="page-main hidden-block">
+        <section class="section">
+            <header class="section-header">
+                <h1>PDV / Produtos</h1>
+                <p>Cadastre produtos e registre vendas por profissional.</p>
+            </header>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Cadastro de produto</h2>
+                </div>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="pdvProdNome">Produto</label>
+                            <input id="pdvProdNome" placeholder="Nome do produto" />
+                        </div>
+                        <div class="field">
+                            <label for="pdvProdValor">Valor (R$)</label>
+                            <input id="pdvProdValor" type="number" step="0.01" />
+                        </div>
+
+                        <div class="field">
+                            <label for="pdvProdEstoque">Estoque</label>
+                            <input id="pdvProdEstoque" type="number" step="1" min="0" value="0" />
+                        </div>
+                    </div>
+
+                    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                        <button id="pdvProdSalvarBtn" class="btn btn-edit"><i class="bx bx-save"></i> Salvar produto</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:14px;">
+                <div class="card-header">
+                    <h2>Produtos cadastrados</h2>
+                </div>
+                <div class="card-body table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Valor</th>
+                                <th style="width:120px;text-align:right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pdvProductsTbody">
+                            <tr>
+                                <td colspan="3" class="loading-row">Carregando produtos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:14px;">
+                <div class="card-header">
+                    <h2>Registrar venda</h2>
+                </div>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="pdvSaleProf">Profissional</label>
+                            <select id="pdvSaleProf">
+                                <option value="reservas_rodrigotorre2">Rodrigo Torre2</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="pdvSaleProduto">Produto</label>
+                            <select id="pdvSaleProduto">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="pdvSaleQtd">Qtd</label>
+                            <input id="pdvSaleQtd" type="number" min="1" value="1" />
+                        </div>
+                    </div>
+
+                    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                        <button id="pdvSaleAddBtn" class="btn btn-edit"><i class="bx bx-plus"></i> Registrar venda</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:14px;">
+                <div class="card-header">
+                    <h2>Últimas vendas</h2>
+                </div>
+
+                <div class="card-body">
+                    <div class="form-grid" style="margin-bottom:12px;">
+                        <div class="field">
+                            <label for="pdvSalesDe">De</label>
+                            <input type="date" id="pdvSalesDe" />
+                        </div>
+                        <div class="field">
+                            <label for="pdvSalesAte">Até</label>
+                            <input type="date" id="pdvSalesAte" />
+                        </div>
+                        <div class="field">
+                            <label>&nbsp;</label>
+                            <button id="pdvFiltrarVendas" class="btn btn-light" type="button">
+                                <i class="bx bx-filter"></i> Filtrar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Profissional</th>
+                                    <th>Produto</th>
+                                    <th>Qtd</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pdvSalesTbody">
+                                <tr>
+                                    <td colspan="5" class="loading-row">Sem vendas para exibir.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MAIN: Configurações -->
+    <main id="configMain" class="page-main hidden-block">
+        <section class="section">
+            <header class="section-header">
+                <h1>Configurações</h1>
+                <p>Cadastre dias e horários de trabalho, exceções, serviços e profissionais.</p>
+            </header>
+
+            <div class="grid-2">
+
+                <!-- ✅✅✅ Funcionamento -->
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-header">
+                        <h2>Funcionamento (dias + horários + intervalo + pausa)</h2>
+                        <p class="card-subtitle">
+                            Defina os dias, o horário padrão do dia, intervalo (min) e uma pausa opcional.
+                        </p>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="form-grid">
+                            <div class="field" style="grid-column: 1 / -1;">
+                                <label>Selecione os dias</label>
+                                <div id="cfgWeekdays" style="display:flex;gap:12px;flex-wrap:wrap;">
+                                    <label class="muted" style="display:flex;gap:8px;align-items:center;">
+                                        <input type="checkbox" value="1" /> Seg
+                                    </label>
+                                    <label class="muted" style="display:flex;gap:8px;align-items:center;">
+                                        <input type="checkbox" value="2" /> Ter
+                                    </label>
+                                    <label class="muted" style="display:flex;gap:8px;align-items:center;">
+                                        <input type="checkbox" value="3" /> Qua
+                                    </label>
+                                    <label class="muted" style="display:flex;gap:8px;align-items:center;">
+                                        <input type="checkbox" value="4" /> Qui
+                                    </label>
+                                    <label class="muted" style="display:flex;gap:8px;align-items:center;">
+                                        <input type="checkbox" value="5" /> Sex
+                                    </label>
+                                    <label class="muted" style="display:flex;gap:8px;align-items:center;">
+                                        <input type="checkbox" value="6" /> Sáb
+                                    </label>
+                                    <label class="muted" style="display:flex;gap:8px;align-items:center;">
+                                        <input type="checkbox" value="0" /> Dom
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label for="cfgDayStart">Início do dia</label>
+                                <input id="cfgDayStart" type="time" value="09:00" />
+                            </div>
+
+                            <div class="field">
+                                <label for="cfgDayEnd">Fim do dia</label>
+                                <input id="cfgDayEnd" type="time" value="19:00" />
+                            </div>
+
+                            <div class="field">
+                                <label for="cfgIntervalMin">Intervalo (min)</label>
+                                <input id="cfgIntervalMin" type="number" min="5" step="5" value="25" />
+                                <small class="muted">Ex.: 15, 20, 25, 30…</small>
+                            </div>
+
+                            <div class="field">
+                                <label for="cfgBreakStart">Pausa (início)</label>
+                                <input id="cfgBreakStart" type="time" placeholder="12:00" />
+                                <small class="muted">Opcional</small>
+                            </div>
+
+                            <div class="field">
+                                <label for="cfgBreakEnd">Pausa (fim)</label>
+                                <input id="cfgBreakEnd" type="time" placeholder="14:00" />
+                                <small class="muted">Opcional</small>
+                            </div>
+
+                            <div class="field" style="display:none;">
+                                <label for="cfgInicio">Início do painel</label>
+                                <input id="cfgInicio" type="time" value="09:00" />
+                            </div>
+
+                            <div class="field" style="display:none;">
+                                <label for="cfgFim">Fim do painel</label>
+                                <input id="cfgFim" type="time" value="19:00" />
+                            </div>
+
+                            <div class="field" style="grid-column: 1 / -1; display:flex; gap:10px; flex-wrap:wrap;">
+                                <button id="cfgSalvarSemana" class="btn btn-edit" type="button"
+                                    onclick="document.getElementById('cfgSalvarHorario')?.click()">
+                                    <i class="bx bx-save"></i> Salvar funcionamento
+                                </button>
+
+                                <button id="cfgSalvarHorario" class="btn btn-light" type="button" style="display:none;">
+                                    <i class="bx bx-save"></i> Salvar (painel)
+                                </button>
+                            </div>
+
+                            <small class="muted" style="grid-column: 1 / -1; display:block;">
+                                Obs: “Salvar funcionamento” agora salva Semana + Horário + Intervalo + Pausa, tudo de uma vez.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exceções -->
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-header">
+                        <h2>Exceções (folgas / horários especiais)</h2>
+                        <p class="card-subtitle">Crie exceções por dia (pet shop geral ou por profissional).</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="cfgExDate">Data</label>
+                                <input id="cfgExDate" type="date" />
+                            </div>
+                            <div class="field">
+                                <label for="cfgExStart">Início</label>
+                                <input id="cfgExStart" type="time" />
+                            </div>
+                            <div class="field">
+                                <label for="cfgExEnd">Fim</label>
+                                <input id="cfgExEnd" type="time" />
+                            </div>
+
+                            <div class="field">
+                                <label style="display:flex;gap:10px;align-items:center;">
+                                    <input id="cfgExClosed" type="checkbox" />
+                                    Dia fechado
+                                </label>
+                                <small class="muted">Se marcar, ignora início/fim.</small>
+                            </div>
+
+                            <div class="field">
+                                <label>&nbsp;</label>
+                                <button id="cfgAddException" class="btn btn-edit" type="button">
+                                    <i class="bx bx-plus"></i> Adicionar exceção
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-wrapper" style="margin-top:12px;">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Status</th>
+                                        <th>Início</th>
+                                        <th>Fim</th>
+                                        <th style="width:120px;text-align:right;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cfgExceptionsTbody">
+                                    <tr>
+                                        <td colspan="5" class="loading-row">Carregando exceções...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profissionais -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Profissionais</h2>
+                        <p class="card-subtitle">Cadastre e edite profissionais (nome, WhatsApp, ativo, foto URL opcional).</p>
+                    </div>
+                    <div class="card-body">
+                        <input id="profEditId" type="hidden" />
+
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="profNome">Nome</label>
+                                <input id="profNome" placeholder="Nome do profissional" />
+                            </div>
+
+                            <div class="field">
+                                <label for="profWpp">WhatsApp</label>
+                                <input id="profWpp" placeholder="(00) 00000-0000" />
+                            </div>
+
+                            <div class="field">
+                                <label for="profFotoUrl">Foto (URL opcional)</label>
+                                <input id="profFotoUrl" placeholder="https://..." />
+                            </div>
+
+                            <div class="field">
+                                <label for="profFotoFile">Foto (arquivo)</label>
+                                <input id="profFotoFile" type="file" accept="image/*" />
+                            </div>
+
+                            <div class="field">
+                                <label style="display:flex;gap:10px;align-items:center;">
+                                    <input id="profAtivo" type="checkbox" checked />
+                                    Ativo
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                            <button id="profSalvar" class="btn btn-edit" type="button"><i class="bx bx-save"></i> Salvar profissional</button>
+                            <button id="profCancelarEdicao" class="btn btn-light" type="button"><i class="bx bx-eraser"></i> Cancelar edição</button>
+                        </div>
+
+                        <div class="table-wrapper" style="margin-top:12px;">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:70px;">Foto</th>
+                                        <th>Nome</th>
+                                        <th>Coleção</th>
+                                        <th style="width:90px;">Ativo</th>
+                                        <th style="width:140px;text-align:right;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="profTbody">
+                                    <tr>
+                                        <td colspan="5" class="loading-row">Carregando profissionais...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Serviços -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Serviços</h2>
+                        <p class="card-subtitle">Cadastre serviços (valor e tempo em minutos).</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="svcNome">Nome</label>
+                                <input id="svcNome" placeholder="Ex.: Banho, Tosa, Hidratação, Corte de unhas..." />
+                            </div>
+                            <div class="field">
+                                <label for="svcValor">Valor (R$)</label>
+                                <input id="svcValor" type="number" step="0.01" />
+                            </div>
+                            <div class="field">
+                                <label for="svcTempo">Tempo (min)</label>
+                                <input id="svcTempo" type="number" step="1" min="5" value="30" />
+                            </div>
+                            <div class="field">
+                                <label>&nbsp;</label>
+                                <button id="svcSalvar" class="btn btn-edit" type="button">
+                                    <i class="bx bx-save"></i> Salvar serviço
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-wrapper" style="margin-top:12px;">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Serviço</th>
+                                        <th>Valor</th>
+                                        <th>Tempo</th>
+                                        <th style="width:120px;text-align:right;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="svcTbody">
+                                    <tr>
+                                        <td colspan="4" class="loading-row">Carregando serviços...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- ✅✅✅ MODAL: Resumo Geral + Saídas / Despesas -->
+    <div id="resumoGeralModal" class="modal hidden">
+        <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="resumoGeralTitle">
+            <header class="modal-header">
+                <h3 id="resumoGeralTitle">Resumo geral • Saídas / Despesas</h3>
+                <button id="resumoGeralClose" class="modal-close" type="button">&times;</button>
+            </header>
+            <div class="modal-body">
+                <div class="kpis" style="margin-top:0;">
+                    <div class="kpi">
+                        <span class="kpi-label">Atendimentos</span>
+                        <span id="rgKpiQtd" class="kpi-value">0</span>
+                    </div>
+                    <div class="kpi">
+                        <span class="kpi-label">Serviços</span>
+                        <span id="rgKpiServicos" class="kpi-value">R$ 0,00</span>
+                    </div>
+                    <div class="kpi">
+                        <span class="kpi-label">Produtos</span>
+                        <span id="rgKpiProdutos" class="kpi-value">R$ 0,00</span>
+                    </div>
+                    <div class="kpi">
+                        <span class="kpi-label">Despesas</span>
+                        <span id="rgKpiDespesas" class="kpi-value">R$ 0,00</span>
+                    </div>
+                    <div class="kpi">
+                        <span class="kpi-label">Resultado líquido</span>
+                        <span id="rgKpiLiquido" class="kpi-value">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <hr style="border:0;border-top:1px solid rgba(148,163,184,0.12);margin:14px 0;">
+
+                <div class="card" style="box-shadow:none;border:1px solid rgba(148,163,184,0.14);">
+                    <div class="card-header">
+                        <h2 style="margin:0;">Registrar despesa</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="expData">Data</label>
+                                <input id="expData" type="date" />
+                            </div>
+                            <div class="field">
+                                <label for="expCategoria">Categoria</label>
+                                <select id="expCategoria">
+                                    <option value="aluguel">Aluguel</option>
+                                    <option value="agua">Água</option>
+                                    <option value="luz">Luz</option>
+                                    <option value="internet">Internet</option>
+                                    <option value="material">Material / Insumos</option>
+                                    <option value="manutencao">Manutenção</option>
+                                    <option value="marketing">Marketing</option>
+                                    <option value="impostos">Impostos / Taxas</option>
+                                    <option value="outros" selected>Outros</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="expDesc">Descrição</label>
+                                <input id="expDesc" placeholder="Ex: compra de ração, shampoo pet, aluguel, etc." />
+                            </div>
+                            <div class="field">
+                                <label for="expValor">Valor (R$)</label>
+                                <input id="expValor" type="number" step="0.01" placeholder="0,00" />
+                            </div>
+                        </div>
+                        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                            <button id="expSalvarBtn" class="btn btn-edit">
+                                <i class="bx bx-save"></i> Salvar despesa
+                            </button>
+                            <button id="expLimparBtn" class="btn btn-light">
+                                <i class="bx bx-eraser"></i> Limpar
+                            </button>
+                        </div>
+                        <small class="muted" style="display:block;margin-top:8px;">
+                            Obs: o JS vai preencher e salvar essas despesas no Firestore (quando você plugar).
+                        </small>
+                    </div>
+                </div>
+
+                <div style="height:12px;"></div>
+
+                <div class="card" style="box-shadow:none;border:1px solid rgba(148,163,184,0.14);">
+                    <div class="card-header">
+                        <h2 style="margin:0;">Saídas / Despesas</h2>
+                    </div>
+                    <div class="card-body table-wrapper">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Categoria</th>
+                                    <th>Descrição</th>
+                                    <th>Valor</th>
+                                    <th style="width:120px;text-align:right;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expTbody">
+                                <tr>
+                                    <td colspan="5" class="loading-row">Sem despesas para exibir.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <footer class="modal-footer">
+                <button id="resumoGeralFecharBtn" class="btn btn-light" type="button">
+                    <i class="bx bx-x"></i> Fechar
+                </button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Modal genérico -->
+    <div id="mainModal" class="modal hidden">
+        <div class="modal-dialog">
+            <header class="modal-header">
+                <h3 id="modalTitle"></h3>
+                <button id="modalClose" class="modal-close" type="button">&times;</button>
+            </header>
+            <div id="modalBody" class="modal-body"></div>
+            <footer id="modalFooter" class="modal-footer"></footer>
+        </div>
+    </div>
+
+    <!-- Script principal -->
+    <script type="module" src="./firebase.js"></script>
+
+    <!-- ✅✅✅ AJUSTE: sincroniza 1 horário visível -> horários ocultos do painel -->
+    <script>
+        (function () {
+            function syncTimes() {
+                const dayStart = document.getElementById("cfgDayStart");
+                const dayEnd = document.getElementById("cfgDayEnd");
+                const panelStart = document.getElementById("cfgInicio");
+                const panelEnd = document.getElementById("cfgFim");
+                if (!dayStart || !dayEnd || !panelStart || !panelEnd) return;
+
+                panelStart.value = dayStart.value || panelStart.value;
+                panelEnd.value = dayEnd.value || panelEnd.value;
+            }
+
+            document.addEventListener("change", (e) => {
+                if (e.target && (e.target.id === "cfgDayStart" || e.target.id === "cfgDayEnd")) {
+                    syncTimes();
+                }
+            });
+
+            window.addEventListener("load", syncTimes);
+        })();
+    </script>
+</body>
+
+</html>
