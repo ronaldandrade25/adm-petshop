@@ -354,7 +354,6 @@ export function populateProfessionalSelects() {
   const relProf = $("#relProf");
   const pdvSaleProfSelect = $("#pdvSaleProf");
 
-  // ========= AGENDA =========
   if (profissionalSelect) {
     const current = (profissionalSelect.value || "").trim();
     if (!list.length) {
@@ -372,7 +371,6 @@ export function populateProfessionalSelects() {
     }
   }
 
-  // ========= RELATÓRIOS =========
   if (relProf) {
     const current = (relProf.value || "").trim();
     if (!list.length) {
@@ -390,7 +388,6 @@ export function populateProfessionalSelects() {
     }
   }
 
-  // ========= PDV =========
   if (pdvSaleProfSelect) {
     const current = (pdvSaleProfSelect.value || "").trim();
     const firstColecao = list[0]?.colecao || ONLY_PRO.colecao;
@@ -431,7 +428,6 @@ function startGlobalListeners() {
   if (window.__globalListenersStarted) return;
   window.__globalListenersStarted = true;
 
-  // ✅ Profissionais
   onSnapshot(
     query(COL_PROF, orderBy("nome")),
     (snap) => {
@@ -458,7 +454,6 @@ function startGlobalListeners() {
     (err) => console.error("Erro listener profissionais (global):", err)
   );
 
-  // ✅ Serviços
   onSnapshot(
     query(COL_SERVICOS, orderBy("nome")),
     (snap) => {
@@ -541,7 +536,7 @@ export function openServicosModal(onSelect) {
   }
 }
 
-/* ========= Firestore exports (usados pelos módulos) ========= */
+/* ========= Firestore exports ========= */
 export {
   addDoc,
   collection,
@@ -595,6 +590,13 @@ async function init() {
   bindResumoGeralModal();
 
   await waitForAuth();
+
+  // ✅ AJUSTE:
+  // Deixa datas padrão e selects prontos antes de iniciar as abas,
+  // especialmente a aba de relatórios.
+  setDefaultDates();
+  populateProfessionalSelects();
+
   startGlobalListeners();
 
   initAgendaTab();
@@ -603,7 +605,6 @@ async function init() {
   initPdvTab();
   initConfiguracoesTab();
 
-  setDefaultDates();
   showTab("agenda");
 }
 

@@ -1,16 +1,15 @@
-// /js/clientes.js
+// js/clientes.js
 import {
   db, $, formatCurrency, showNotification, mainModal,
   state, waitForAuth,
-  addDoc, updateDoc, deleteDoc, doc, collection, onSnapshot, query, orderBy, serverTimestamp,
-  formatDate
+  addDoc, updateDoc, deleteDoc, doc, collection, onSnapshot, query, orderBy, serverTimestamp
 } from "./firebase.js";
 
 export function initClientesTab() {
   const cliNome = $("#cliNome");
-  const cliSobrenome = $("#cliSobrenome"); // no Pet Shop = nome do pet
+  const cliSobrenome = $("#cliSobrenome");
   const cliTelefone = $("#cliTelefone");
-  const cliRaclub = $("#cliRaclub"); // no Pet Shop = Clube Pet
+  const cliRaclub = $("#cliRaclub");
   const cliSalvarBtn = $("#cliSalvarBtn");
   const cliLimparBtn = $("#cliLimparBtn");
   const clientesTbody = $("#clientesTbody");
@@ -18,79 +17,97 @@ export function initClientesTab() {
 
   if (!clientesTbody) return;
 
-  function clearForm() {
+  function onlyDigits(v) {
+    return String(v || "").replace(/\D/g, "");
+  }
+
+  function formatPhone(v) {
+    const d = onlyDigits(v).slice(0, 11);
+
+    if (d.length <= 2) return d;
+    if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+    if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+    return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7, 11)}`;
+  }
+
+  function monthLabelFromDate(dateObj) {
+    const d = dateObj instanceof Date ? dateObj : new Date();
+    return d.toLocaleDateString("pt-BR", { month: "2-digit", year: "numeric" });
+  }
+
+  function resetClientForm() {
     if (cliNome) cliNome.value = "";
     if (cliSobrenome) cliSobrenome.value = "";
     if (cliTelefone) cliTelefone.value = "";
     if (cliRaclub) cliRaclub.value = "nao";
+    cliNome?.focus();
   }
 
-  function normalizeClientDoc(id, v) {
-    const nome = v.nome || v.name || "";
-    const pet = v.pet || v.clienteSobrenome || v.sobrenome || "";
-    const telefone = v.telefone || v.phone || "";
-    const clubePet =
-      v.clubePet ||
-      v.raclub ||
-      v.plano ||
-      (v.type === "plano_jc" ? "membro" : "nao") ||
-      "nao";
+  function mapClientDoc(id, v) {
+    const nome = (v.nome || v.name || "").trim();
+    const sobrenome = (v.sobrenome || "").trim();
+    const nomeCompleto =
+      (v.nomeCompleto || v.clientName || `${nome} ${sobrenome}`).trim() ||
+      nome ||
+      "—";
 
-    const isMember =
-      clubePet === "membro" ||
-      clubePet === "ra_club" ||
-      clubePet === "clube_pet" ||
-      clubePet === "PLANO_RA" ||
+    const telefone = (v.telefone || v.phone || "").trim();
+
+    const membro =
+      v.raclub === "membro" ||
+      v.raClub === "membro" ||
+      v.plano === "ra_club" ||
       v.type === "plano_jc" ||
+      v.type === "plano_ra" ||
       v.isPlan === true;
+
+    const status = v.status || v.situacao || (membro ? "ativo" : "nao_membro");
+    const valorMensal = Number(v.valorMensal ?? v.value ?? v.valor ?? 0);
 
     return {
       id,
       nome,
-      pet,
+      sobrenome,
+      nomeCompleto,
       telefone,
-      clubePet: isMember ? "membro" : "nao",
-      status: v.status || v.situacao || (isMember ? "ativo" : "—"),
-      createdAt: v.createdAt || null,
+      raclub: membro ? "membro" : "nao",
+      status,
+      valorMensal
     };
   }
 
   function renderClients() {
-    if (!clientesTbody) return;
+    const rows = state.allClients || [];
 
-    const clients = [...(state.allClients || [])].sort((a, b) =>
-      (a.nome || "").localeCompare(b.nome || "", "pt-BR")
-    );
-
-    if (!clients.length) {
+    if (!rows.length) {
       clientesTbody.innerHTML = `
         <tr>
-          <td colspan="4" class="loading-row">Nenhum tutor cadastrado.</td>
+          <td colspan="4" class="loading-row">Nenhum cliente cadastrado.</td>
         </tr>
       `;
       return;
     }
 
-    clientesTbody.innerHTML = clients
+    clientesTbody.innerHTML = rows
       .map((c) => {
-        const clubeLabel = c.clubePet === "membro" ? "Membro" : "Não é membro";
+        const raclubLabel =
+          c.raclub === "membro"
+            ? `<span class="status-badge status-confirmed">Membro</span>`
+            : `<span class="status-badge">Não é membro</span>`;
 
         return `
           <tr>
-            <td>
-              <strong>${escapeHtml(c.nome || "—")}</strong>
-              ${c.pet ? `<div class="muted">Pet: ${escapeHtml(c.pet)}</div>` : ""}
-            </td>
-            <td>${escapeHtml(c.telefone || "—")}</td>
-            <td>${clubeLabel}</td>
+            <td>${c.nomeCompleto || "—"}</td>
+            <td>${c.telefone || "—"}</td>
+            <td>${raclubLabel}</td>
             <td style="text-align:right;">
-              <div class="timeslot-actions">
+              <div class="timeslot-actions" style="justify-content:flex-end;">
                 <button class="btn btn-sm btn-edit" data-action="edit-client" data-id="${c.id}" title="Editar">
                   <i class="bx bx-pencil"></i>
                 </button>
 
                 ${
-                  c.clubePet === "membro"
+                  c.raclub === "membro"
                     ? `
                   <button class="btn btn-sm btn-success" data-action="pay-client" data-id="${c.id}" title="Registrar pagamento">
                     <i class="bx bx-dollar"></i>
@@ -113,13 +130,7 @@ export function initClientesTab() {
   function renderPayments(payments) {
     if (!raclubPayTbody) return;
 
-    const rows = [...payments].sort((a, b) => {
-      const da = getPaymentDate(a);
-      const db = getPaymentDate(b);
-      return db - da;
-    });
-
-    if (!rows.length) {
+    if (!payments.length) {
       raclubPayTbody.innerHTML = `
         <tr>
           <td colspan="4" class="loading-row">Sem pagamentos para exibir.</td>
@@ -128,35 +139,21 @@ export function initClientesTab() {
       return;
     }
 
-    raclubPayTbody.innerHTML = rows
+    raclubPayTbody.innerHTML = payments
       .map((p) => {
-        const d = getPaymentDate(p);
-        const mesAno = d
-          ? d.toLocaleDateString("pt-BR", { month: "2-digit", year: "numeric" })
-          : "—";
-
-        const tutor =
-          p.clientName ||
-          p.nomeCliente ||
-          p.nome ||
-          "—";
-
+        const ts = p.date || p.dataPagamento || p.createdAt;
+        const d = ts?.toDate ? ts.toDate() : null;
+        const mes = d ? monthLabelFromDate(d) : "—";
         const valor = Number(p.value ?? p.valor ?? 0);
+        const cliente = p.clientName || p.nomeCliente || p.nome || "—";
         const status = p.status || "Pago";
 
         return `
           <tr>
-            <td>${escapeHtml(tutor)}</td>
-            <td>${mesAno}</td>
+            <td>${cliente}</td>
+            <td>${mes}</td>
             <td>${formatCurrency(valor)}</td>
-            <td>
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                <span>${escapeHtml(status)}</span>
-                <button class="btn btn-sm btn-del" data-payment-id="${p.id}" title="Excluir pagamento">
-                  <i class="bx bx-trash"></i>
-                </button>
-              </div>
-            </td>
+            <td>${status}</td>
           </tr>
         `;
       })
@@ -167,49 +164,74 @@ export function initClientesTab() {
     await waitForAuth();
 
     const nome = (cliNome?.value || "").trim();
-    const pet = (cliSobrenome?.value || "").trim();
-    const telefone = (cliTelefone?.value || "").trim();
-    const clubePet = cliRaclub?.value || "nao";
+    const sobrenome = (cliSobrenome?.value || "").trim();
+    const telefone = formatPhone(cliTelefone?.value || "");
+    const raclub = cliRaclub?.value || "nao";
 
     if (!nome) {
-      showNotification("Informe o nome do tutor.", "error");
+      showNotification("Informe o nome do cliente.", "error");
+      cliNome?.focus();
       return;
     }
 
-    const isMember = clubePet === "membro";
+    const nomeCompleto = `${nome} ${sobrenome}`.trim();
+    const isMember = raclub === "membro";
 
-    const dataFirestore = {
-      // padrão novo / pet
+    const payload = {
       nome,
-      pet,
+      sobrenome,
+      nomeCompleto,
       telefone,
-      clubePet,
-
-      // compatibilidade com projeto antigo
-      name: nome,
-      phone: telefone,
-      clienteSobrenome: pet,
-      sobrenome: pet,
-      raclub: clubePet,
-      plano: isMember ? "ra_club" : "cliente",
-      type: isMember ? "plano_jc" : "cliente",
-      status: isMember ? "ativo" : null,
-      situacao: isMember ? "ativo" : null,
-
+      raclub,
+      status: isMember ? "ativo" : "nao_membro",
       createdAt: serverTimestamp(),
+
+      // compatibilidade com estrutura antiga
+      name: nomeCompleto,
+      phone: telefone,
+      type: isMember ? "plano_jc" : "cliente",
+      plano: isMember ? "ra_club" : "cliente",
+      isPlan: isMember,
+      valorMensal: 0,
+      diaPagamento: null,
+      situacao: isMember ? "ativo" : "nao_membro"
     };
 
     try {
-      cliSalvarBtn && (cliSalvarBtn.disabled = true);
-      await addDoc(collection(db, "raclub_clients"), dataFirestore);
-      clearForm();
-      showNotification("Tutor cadastrado com sucesso!", "success");
+      await addDoc(collection(db, "raclub_clients"), payload);
+      resetClientForm();
+      showNotification("Cliente salvo com sucesso!", "success");
     } catch (err) {
-      console.error("Erro ao salvar tutor:", err);
-      showNotification("Erro ao cadastrar tutor.", "error");
-    } finally {
-      cliSalvarBtn && (cliSalvarBtn.disabled = false);
+      console.error("Erro ao salvar cliente:", err);
+      showNotification("Erro ao salvar cliente.", "error");
     }
+  }
+
+  async function deleteClient(id) {
+    const client = (state.allClients || []).find((c) => c.id === id);
+    if (!client) return;
+
+    mainModal.show({
+      title: "Excluir cliente",
+      body: `<p>Tem certeza que deseja excluir <strong>${client.nomeCompleto}</strong>?</p>`,
+      buttons: [
+        { text: "Cancelar", class: "btn-light" },
+        {
+          text: "Excluir",
+          class: "btn-del",
+          onClick: async () => {
+            await waitForAuth();
+            try {
+              await deleteDoc(doc(db, "raclub_clients", id));
+              showNotification("Cliente excluído com sucesso!", "success");
+            } catch (err) {
+              console.error("Erro ao excluir cliente:", err);
+              showNotification("Erro ao excluir cliente.", "error");
+            }
+          }
+        }
+      ]
+    });
   }
 
   async function openEditClientModal(id) {
@@ -217,26 +239,29 @@ export function initClientesTab() {
     if (!client) return;
 
     mainModal.show({
-      title: "Editar tutor",
+      title: "Editar cliente",
       body: `
         <div class="form-grid">
           <div class="field">
-            <label>Nome do tutor</label>
-            <input id="editCliNome" value="${escapeAttr(client.nome || "")}" />
+            <label>Nome</label>
+            <input id="editCliNome" value="${client.nome || ""}" />
           </div>
+
           <div class="field">
-            <label>Nome do pet</label>
-            <input id="editCliPet" value="${escapeAttr(client.pet || "")}" />
+            <label>Sobrenome</label>
+            <input id="editCliSobrenome" value="${client.sobrenome || ""}" />
           </div>
+
           <div class="field">
             <label>Telefone</label>
-            <input id="editCliTelefone" value="${escapeAttr(client.telefone || "")}" />
+            <input id="editCliTelefone" value="${client.telefone || ""}" />
           </div>
+
           <div class="field">
-            <label>Clube Pet</label>
+            <label>RA Club</label>
             <select id="editCliRaclub">
-              <option value="nao" ${client.clubePet === "nao" ? "selected" : ""}>Não é membro</option>
-              <option value="membro" ${client.clubePet === "membro" ? "selected" : ""}>Membro</option>
+              <option value="nao" ${client.raclub === "nao" ? "selected" : ""}>Não é membro</option>
+              <option value="membro" ${client.raclub === "membro" ? "selected" : ""}>Membro</option>
             </select>
           </div>
         </div>
@@ -250,74 +275,45 @@ export function initClientesTab() {
             await waitForAuth();
 
             const nome = ($("#editCliNome")?.value || "").trim();
-            const pet = ($("#editCliPet")?.value || "").trim();
-            const telefone = ($("#editCliTelefone")?.value || "").trim();
-            const clubePet = $("#editCliRaclub")?.value || "nao";
+            const sobrenome = ($("#editCliSobrenome")?.value || "").trim();
+            const telefone = formatPhone($("#editCliTelefone")?.value || "");
+            const raclub = $("#editCliRaclub")?.value || "nao";
 
             if (!nome) {
-              showNotification("Informe o nome do tutor.", "error");
+              showNotification("Informe o nome do cliente.", "error");
               return false;
             }
 
-            const isMember = clubePet === "membro";
+            const nomeCompleto = `${nome} ${sobrenome}`.trim();
+            const isMember = raclub === "membro";
 
             try {
               await updateDoc(doc(db, "raclub_clients", id), {
                 nome,
-                pet,
+                sobrenome,
+                nomeCompleto,
                 telefone,
-                clubePet,
+                raclub,
+                status: isMember ? "ativo" : "nao_membro",
 
-                // compatibilidade
-                name: nome,
+                // compatibilidade com estrutura antiga
+                name: nomeCompleto,
                 phone: telefone,
-                clienteSobrenome: pet,
-                sobrenome: pet,
-                raclub: clubePet,
-                plano: isMember ? "ra_club" : "cliente",
                 type: isMember ? "plano_jc" : "cliente",
-                status: isMember ? "ativo" : null,
-                situacao: isMember ? "ativo" : null,
+                plano: isMember ? "ra_club" : "cliente",
+                isPlan: isMember,
+                situacao: isMember ? "ativo" : "nao_membro"
               });
 
-              showNotification("Tutor atualizado com sucesso!", "success");
+              showNotification("Cliente atualizado com sucesso!", "success");
             } catch (err) {
-              console.error("Erro ao atualizar tutor:", err);
-              showNotification("Erro ao atualizar tutor.", "error");
+              console.error("Erro ao atualizar cliente:", err);
+              showNotification("Erro ao atualizar cliente.", "error");
               return false;
             }
-          },
-        },
-      ],
-    });
-  }
-
-  async function deleteClient(id) {
-    const client = (state.allClients || []).find((c) => c.id === id);
-    if (!client) return;
-
-    mainModal.show({
-      title: "Excluir tutor",
-      body: `<p>Deseja remover <strong>${escapeHtml(client.nome)}</strong>?</p>`,
-      buttons: [
-        { text: "Cancelar", class: "btn-light" },
-        {
-          text: "Excluir",
-          class: "btn-del",
-          onClick: async () => {
-            await waitForAuth();
-
-            try {
-              await deleteDoc(doc(db, "raclub_clients", id));
-              showNotification("Tutor removido com sucesso!", "success");
-            } catch (err) {
-              console.error("Erro ao excluir tutor:", err);
-              showNotification("Erro ao excluir tutor.", "error");
-              return false;
-            }
-          },
-        },
-      ],
+          }
+        }
+      ]
     });
   }
 
@@ -326,16 +322,25 @@ export function initClientesTab() {
     if (!client) return;
 
     mainModal.show({
-      title: "Registrar pagamento do Clube Pet",
+      title: "Registrar pagamento RA Club",
       body: `
         <div class="form-grid">
           <div class="field">
-            <label>Tutor</label>
-            <input value="${escapeAttr(client.nome || "")}" disabled />
+            <label>Cliente</label>
+            <input value="${client.nomeCompleto}" disabled />
           </div>
+
           <div class="field">
             <label>Valor</label>
-            <input id="payValue" type="number" step="0.01" placeholder="0,00" />
+            <input id="payValue" type="number" step="0.01" min="0" placeholder="0.00" />
+          </div>
+
+          <div class="field">
+            <label>Status</label>
+            <select id="payStatus">
+              <option value="Pago">Pago</option>
+              <option value="Pendente">Pendente</option>
+            </select>
           </div>
         </div>
       `,
@@ -348,7 +353,9 @@ export function initClientesTab() {
             await waitForAuth();
 
             const value = Number($("#payValue")?.value || 0);
-            if (!value) {
+            const status = $("#payStatus")?.value || "Pago";
+
+            if (!value || value <= 0) {
               showNotification("Informe um valor válido.", "error");
               return false;
             }
@@ -356,14 +363,16 @@ export function initClientesTab() {
             try {
               await addDoc(collection(db, "raclub_payments"), {
                 clientId: client.id,
-                clientName: client.nome || "",
-                nomeCliente: client.nome || "",
+                clientName: client.nomeCompleto,
                 value,
-                valor: value,
-                status: "Pago",
+                status,
                 date: serverTimestamp(),
+
+                // compatibilidade com estrutura antiga
+                nomeCliente: client.nomeCompleto,
+                valor: value,
                 dataPagamento: serverTimestamp(),
-                createdAt: serverTimestamp(),
+                nome: client.nomeCompleto
               });
 
               showNotification("Pagamento registrado com sucesso!", "success");
@@ -372,14 +381,27 @@ export function initClientesTab() {
               showNotification("Erro ao registrar pagamento.", "error");
               return false;
             }
-          },
-        },
-      ],
+          }
+        }
+      ]
     });
   }
 
-  // ações da tabela de tutores
-  clientesTbody.addEventListener("click", (e) => {
+  cliTelefone?.addEventListener("input", () => {
+    cliTelefone.value = formatPhone(cliTelefone.value);
+  });
+
+  cliSalvarBtn?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    await saveClient();
+  });
+
+  cliLimparBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    resetClientForm();
+  });
+
+  clientesTbody?.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-action]");
     if (!btn) return;
 
@@ -391,57 +413,22 @@ export function initClientesTab() {
     if (action === "delete-client") deleteClient(id);
   });
 
-  // ações da tabela de pagamentos
-  raclubPayTbody?.addEventListener("click", (e) => {
-    const btn = e.target.closest("button[data-payment-id]");
-    if (!btn) return;
-
-    const paymentId = btn.dataset.paymentId;
-    if (!paymentId) return;
-
-    mainModal.show({
-      title: "Excluir pagamento",
-      body: "<p>Deseja remover este pagamento?</p>",
-      buttons: [
-        { text: "Cancelar", class: "btn-light" },
-        {
-          text: "Excluir",
-          class: "btn-del",
-          onClick: async () => {
-            await waitForAuth();
-
-            try {
-              await deleteDoc(doc(db, "raclub_payments", paymentId));
-              showNotification("Pagamento removido com sucesso!", "success");
-            } catch (err) {
-              console.error("Erro ao excluir pagamento:", err);
-              showNotification("Erro ao excluir pagamento.", "error");
-              return false;
-            }
-          },
-        },
-      ],
-    });
-  });
-
-  cliSalvarBtn?.addEventListener("click", saveClient);
-  cliLimparBtn?.addEventListener("click", clearForm);
-
-  // listeners
   (async () => {
     await waitForAuth();
 
     onSnapshot(
-      query(collection(db, "raclub_clients"), orderBy("nome")),
+      collection(db, "raclub_clients"),
       (snap) => {
-        state.allClients = snap.docs.map((d) => normalizeClientDoc(d.id, d.data() || {}));
+        state.allClients = snap.docs
+          .map((d) => mapClientDoc(d.id, d.data() || {}))
+          .sort((a, b) => (a.nomeCompleto || "").localeCompare(b.nomeCompleto || ""));
         renderClients();
       },
       (error) => {
-        console.error("Erro listener tutores:", error);
+        console.error("Erro listener clientes:", error);
         clientesTbody.innerHTML = `
           <tr>
-            <td colspan="4" class="loading-row">Erro ao carregar tutores.</td>
+            <td colspan="4" class="loading-row">Erro ao carregar clientes.</td>
           </tr>
         `;
       }
@@ -453,37 +440,31 @@ export function initClientesTab() {
         const payments = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         renderPayments(payments);
       },
-      (error) => {
+      async (error) => {
         console.error("Erro listener pagamentos:", error);
-        if (raclubPayTbody) {
-          raclubPayTbody.innerHTML = `
-            <tr>
-              <td colspan="4" class="loading-row">Erro ao carregar pagamentos.</td>
-            </tr>
-          `;
-        }
+
+        // fallback para registros antigos que podem não ter o campo "date"
+        onSnapshot(
+          collection(db, "raclub_payments"),
+          (snap) => {
+            const payments = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+            payments.sort((a, b) => {
+              const da = (a.date || a.dataPagamento)?.toDate?.()?.getTime?.() || 0;
+              const dbb = (b.date || b.dataPagamento)?.toDate?.()?.getTime?.() || 0;
+              return dbb - da;
+            });
+            renderPayments(payments);
+          },
+          (err2) => {
+            console.error("Erro fallback pagamentos:", err2);
+            raclubPayTbody.innerHTML = `
+              <tr>
+                <td colspan="4" class="loading-row">Erro ao carregar pagamentos.</td>
+              </tr>
+            `;
+          }
+        );
       }
     );
   })();
-}
-
-/* ========= helpers locais ========= */
-function getPaymentDate(p) {
-  const ts = p.date || p.dataPagamento || p.createdAt;
-  if (ts?.toDate) return ts.toDate();
-  if (ts instanceof Date) return ts;
-  return null;
-}
-
-function escapeHtml(str) {
-  return String(str || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function escapeAttr(str) {
-  return escapeHtml(str);
 }
