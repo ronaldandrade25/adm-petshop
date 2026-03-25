@@ -109,7 +109,6 @@ export function initConfiguracoesTab() {
     function normalizeTimeOrEmpty(t) {
       const v = String(t || "").trim();
       if (!v) return "";
-      // hh:mm
       if (!/^\d{2}:\d{2}$/.test(v)) return "";
       return v;
     }
@@ -120,7 +119,6 @@ export function initConfiguracoesTab() {
       return h * 60 + m;
     }
 
-    // ✅ intervalo (min) robusto
     function getIntervalMinFromUI() {
       const raw = String(cfgIntervalMin?.value ?? "").trim();
       const n = Number(raw);
@@ -128,18 +126,13 @@ export function initConfiguracoesTab() {
       return Math.max(5, Math.round(n));
     }
 
-    // ✅ pausa almoço: retorna { breakStart, breakEnd } ou vazio se inválido
     function getBreakFromUI() {
       const bs = normalizeTimeOrEmpty(cfgBreakStart?.value || "");
       const be = normalizeTimeOrEmpty(cfgBreakEnd?.value || "");
 
-      // se não preencheu nada, não usa pausa
       if (!bs && !be) return { breakStart: "", breakEnd: "" };
-
-      // se preencheu só um, ignora (não trava)
       if (!bs || !be) return { breakStart: "", breakEnd: "" };
 
-      // se start >= end, ignora (não trava)
       const ms = toMinutes(bs);
       const me = toMinutes(be);
       if (!Number.isFinite(ms) || !Number.isFinite(me) || ms >= me) {
@@ -158,7 +151,6 @@ export function initConfiguracoesTab() {
       );
     }
 
-    // ✅ tenta executar uma escrita 2x (às vezes auth ainda está “subindo”)
     async function runWithQuickRetry(fn) {
       try {
         return await fn();
@@ -457,7 +449,6 @@ export function initConfiguracoesTab() {
                 const nomeNew = ($("#mProfNome")?.value || "").trim();
                 const wppNew = normalizeWpp($("#mProfWpp")?.value || "");
                 const ativoNew = !!$("#mProfAtivo")?.checked;
-
                 const urlTyped = normalizeUrl($("#mProfFotoUrl")?.value || "");
 
                 if (!nomeNew) {
@@ -626,7 +617,6 @@ export function initConfiguracoesTab() {
     async function loadConfigData() {
       await waitForAuth();
 
-      // ===== horários do painel + intervalo + pausa (opcional) =====
       try {
         const snap = await getDoc(CFG_DOC_HORARIOS);
         if (snap.exists()) {
@@ -636,7 +626,6 @@ export function initConfiguracoesTab() {
             fim: v.fim || state.BUSINESS_HOURS.fim,
           };
 
-          // ✅ intervalo pode ter vindo como intervalMin (novo) ou intervalMinuto (legado), etc.
           const maybeInterval =
             (typeof v.intervalMin === "number" ? v.intervalMin : undefined);
 
@@ -644,7 +633,6 @@ export function initConfiguracoesTab() {
             state.INTERVAL_MIN = Math.max(5, Math.round(maybeInterval));
           }
 
-          // ✅ pausa almoço salva no mesmo doc (opcional)
           const bs = normalizeTimeOrEmpty(v.breakStart || "");
           const be = normalizeTimeOrEmpty(v.breakEnd || "");
           if (bs && be && toMinutes(bs) < toMinutes(be)) {
@@ -660,13 +648,11 @@ export function initConfiguracoesTab() {
         const intervalToUse = Number.isFinite(state.INTERVAL_MIN) ? state.INTERVAL_MIN : 25;
         if (cfgIntervalMin) cfgIntervalMin.value = String(intervalToUse);
 
-        // ✅ preenche inputs da pausa (se existirem)
         const bsUI = state.BREAK?.breakStart || "";
         const beUI = state.BREAK?.breakEnd || "";
         if (cfgBreakStart) cfgBreakStart.value = bsUI;
         if (cfgBreakEnd) cfgBreakEnd.value = beUI;
 
-        // ✅ gerar horas (compatível com generateHours antigo e novo)
         const { breakStart, breakEnd } = getBreakFromUI();
         try {
           state.HOURS = generateHours(
@@ -677,14 +663,12 @@ export function initConfiguracoesTab() {
             breakEnd
           );
         } catch {
-          // fallback caso sua generateHours ainda aceite só 3 params
           state.HOURS = generateHours(state.BUSINESS_HOURS.inicio, state.BUSINESS_HOURS.fim, intervalToUse);
         }
       } catch (e) {
         console.error("Erro ao carregar horários do painel:", e);
       }
 
-      // ===== semana =====
       try {
         const snap = await getDoc(CFG_DOC_SEMANA);
         if (snap.exists()) {
@@ -786,7 +770,6 @@ export function initConfiguracoesTab() {
               inicio,
               fim,
               intervalMin,
-              // ✅ pausa almoço no mesmo doc (opcional)
               breakStart: breakStart || "",
               breakEnd: breakEnd || "",
               updatedAt: serverTimestamp(),
@@ -799,7 +782,6 @@ export function initConfiguracoesTab() {
         state.INTERVAL_MIN = intervalMin;
         state.BREAK = { breakStart, breakEnd };
 
-        // ✅ gerar horas com pausa (compatível com generateHours antigo e novo)
         try {
           state.HOURS = generateHours(inicio, fim, intervalMin, breakStart, breakEnd);
         } catch {
@@ -973,6 +955,40 @@ export function initConfiguracoesTab() {
         if (isPermissionError(err)) showPermissionHint("cadastrar serviço");
         else showNotification("Erro ao cadastrar serviço.", "error");
       }
+    });
+
+    // ✅ EXCLUIR SERVIÇO
+    svcTbody?.addEventListener("click", async (e) => {
+      const btn = e.target.closest("[data-svc-del]");
+      if (!btn) return;
+
+      const id = btn.dataset.svcDel;
+      if (!id) return;
+
+      mainModal.show({
+        title: "Excluir serviço",
+        body: "<p>Deseja remover este serviço?</p>",
+        buttons: [
+          { text: "Cancelar", class: "btn-light" },
+          {
+            text: "Excluir",
+            class: "btn-del",
+            onClick: async () => {
+              try {
+                await waitForAuth();
+                await runWithQuickRetry(() => deleteDoc(doc(db, "servicos", id)));
+                showNotification("Serviço removido!", "success");
+                return true;
+              } catch (err) {
+                console.error(err);
+                if (isPermissionError(err)) showPermissionHint("remover serviço");
+                else showNotification("Erro ao remover serviço.", "error");
+                return false;
+              }
+            },
+          },
+        ],
+      });
     });
 
     // ✅ start
