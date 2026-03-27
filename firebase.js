@@ -40,13 +40,12 @@ import { initConfiguracoesTab } from "./configuracoes.js";
 
 /* ========= Firebase ========= */
 const firebaseConfig = {
-  apiKey: "AIzaSyDgaoVZK-5TF5xDFulLISridU9IXbmEYgg",
-  authDomain: "barbearia-agenda-fe2a7.firebaseapp.com",
-  projectId: "barbearia-agenda-fe2a7",
-  storageBucket: "barbearia-agenda-fe2a7.firebasestorage.app",
-  messagingSenderId: "876658896099",
-  appId: "1:876658896099:web:6a361416ed84fd636f29d6",
-  measurementId: "G-NJ4ETW1TNZ",
+    apiKey: "AIzaSyCmjtUsxKgXQd35xp2gk4Ap0QlYmGWEGYI",
+  authDomain: "petshop-90f21.firebaseapp.com",
+  projectId: "petshop-90f21",
+  storageBucket: "petshop-90f21.firebasestorage.app",
+  messagingSenderId: "746188747686",
+  appId: "1:746188747686:web:d95433d74e8e4291ff9567"
 };
 
 const app = initializeApp(firebaseConfig);
