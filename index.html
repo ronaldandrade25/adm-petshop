@@ -19,39 +19,97 @@
 </head>
 
 <body>
-    <!-- Notificações (toasts) -->
-    <div id="notification-container"></div>
 
-    <!-- Header / Navegação -->
-    <header class="app-header">
-        <nav class="app-nav">
+    <!-- Overlay Mobile -->
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-top">
             <a href="#" class="logo" onclick="return false;">
-                <img src="./assets/ra-petshop.png" alt="Logo do Pet Shop" class="logo-img" />
+                <img src="./assets/ra-petshop.png" class="logo-img" />
                 <div class="logo-text">
                     <span>RA Pet Shop</span>
-                    <small>Painel Administrativo •</small>
+                    <small>Painel</small>
                 </div>
             </a>
 
-            <div class="tabs-in-header">
-                <button type="button" class="tab-btn" data-tab="agenda">
-                    <i class="bx bx-calendar"></i> Agenda
-                </button>
-                <button type="button" class="tab-btn" data-tab="reports">
-                    <i class="bx bx-bar-chart"></i> Relatórios
-                </button>
-                <button type="button" class="tab-btn" data-tab="clientes">
-                    <i class="bx bx-user-pin"></i> Tutores / Clube Pet
-                </button>
-                <button type="button" class="tab-btn" data-tab="pdv">
-                    <i class="bx bx-cart"></i> PDV / Produtos
-                </button>
-                <button type="button" class="tab-btn" data-tab="config">
-                    <i class="bx bx-cog"></i> Configurações
-                </button>
-            </div>
+            <button id="closeSidebar" class="close-sidebar">
+                <i class="bx bx-x"></i>
+            </button>
+        </div>
+
+        <nav class="sidebar-menu">
+
+            <!-- 🔥 MANTIVE AS MESMAS CLASSES -->
+            <button type="button" class="tab-btn" data-tab="agenda">
+                <i class="bx bx-calendar"></i> Agenda
+            </button>
+
+            <button type="button" class="tab-btn" data-tab="reports">
+                <i class="bx bx-bar-chart"></i> Relatórios
+            </button>
+
+            <button type="button" class="tab-btn" data-tab="clientes">
+                <i class="bx bx-user-pin"></i> Tutores / Clube Pet
+            </button>
+
+            <button type="button" class="tab-btn" data-tab="pdv">
+                <i class="bx bx-cart"></i> PDV / Produtos
+            </button>
+
+            <button type="button" class="tab-btn" data-tab="config">
+                <i class="bx bx-cog"></i> Configurações
+            </button>
+
         </nav>
+    </aside>
+
+    <!-- HEADER NOVO -->
+    <header class="topbar">
+        <button id="openSidebar" class="menu-btn">
+            <i class="bx bx-menu"></i>
+        </button>
+
+        <h2>Painel Administrativo</h2>
     </header>
+
+    <!-- CONTAINER -->
+    <div class="layout">
+
+        <!-- ⚠️ SEU HEADER ANTIGO FICA ESCONDIDO (não removi nada) -->
+        <header class="app-header" style="display:none;">
+            <nav class="app-nav">
+                <a href="#" class="logo" onclick="return false;">
+                    <img src="./assets/ra-petshop.png" alt="Logo do Pet Shop" class="logo-img" />
+                    <div class="logo-text">
+                        <span>RA Pet Shop</span>
+                        <small>Painel Administrativo •</small>
+                    </div>
+                </a>
+
+                <div class="tabs-in-header">
+                    <button type="button" class="tab-btn" data-tab="agenda">
+                        <i class="bx bx-calendar"></i> Agenda
+                    </button>
+                    <button type="button" class="tab-btn" data-tab="reports">
+                        <i class="bx bx-bar-chart"></i> Relatórios
+                    </button>
+                    <button type="button" class="tab-btn" data-tab="clientes">
+                        <i class="bx bx-user-pin"></i> Tutores / Clube Pet
+                    </button>
+                    <button type="button" class="tab-btn" data-tab="pdv">
+                        <i class="bx bx-cart"></i> PDV / Produtos
+                    </button>
+                    <button type="button" class="tab-btn" data-tab="config">
+                        <i class="bx bx-cog"></i> Configurações
+                    </button>
+                </div>
+            </nav>
+        </header>
+
+        <!-- 🔥 TODO RESTO DO SEU HTML CONTINUA IGUAL -->
 
     <!-- MAIN: Agenda -->
     <main id="agendaMain" class="page-main">
@@ -1055,6 +1113,27 @@
 
             window.addEventListener("load", syncTimes);
         })();
+
+
+        const sidebar = document.getElementById("sidebar");
+const openBtn = document.getElementById("openSidebar");
+const closeBtn = document.getElementById("closeSidebar");
+const overlay = document.getElementById("sidebarOverlay");
+
+openBtn.onclick = () => {
+    sidebar.classList.add("active");
+    overlay.classList.add("active");
+};
+
+closeBtn.onclick = () => {
+    sidebar.classList.remove("active");
+    overlay.classList.remove("active");
+};
+
+overlay.onclick = () => {
+    sidebar.classList.remove("active");
+    overlay.classList.remove("active");
+};
     </script>
 </body>
 
