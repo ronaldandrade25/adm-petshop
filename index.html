@@ -59,6 +59,14 @@
                 <i class="bx bx-cart"></i> PDV / Produtos
             </button>
 
+            <button type="button" class="tab-btn" data-tab="hotelzinho">
+                <i class="bx bx-home-heart"></i> Hotelzinho
+            </button>
+
+            <button type="button" class="tab-btn" data-tab="buscaentrega">
+                <i class="bx bx-car"></i> Busca / Entrega
+            </button>
+
             <button type="button" class="tab-btn" data-tab="config">
                 <i class="bx bx-cog"></i> Configurações
             </button>
@@ -101,6 +109,12 @@
                     </button>
                     <button type="button" class="tab-btn" data-tab="pdv">
                         <i class="bx bx-cart"></i> PDV / Produtos
+                    </button>
+                    <button type="button" class="tab-btn" data-tab="hotelzinho">
+                        <i class="bx bx-home-heart"></i> Hotelzinho
+                    </button>
+                    <button type="button" class="tab-btn" data-tab="buscaentrega">
+                        <i class="bx bx-car"></i> Busca / Entrega
                     </button>
                     <button type="button" class="tab-btn" data-tab="config">
                         <i class="bx bx-cog"></i> Configurações
@@ -683,6 +697,306 @@
             </div>
         </section>
     </main>
+
+    
+    <!-- MAIN: Hotelzinho -->
+    <main id="hotelzinhoMain" class="page-main hidden-block">
+        <section class="section">
+            <header class="section-header">
+                <h1>Hotelzinho</h1>
+                <p>Cadastre hospedagens, acompanhe entradas e saídas e prepare os dados para o agendamento do hotelzinho.</p>
+            </header>
+
+            <div class="toolbar">
+                <div class="field">
+                    <label for="hotelFiltroTutor">Tutor</label>
+                    <input id="hotelFiltroTutor" placeholder="Buscar por nome do tutor" />
+                </div>
+
+                <div class="field">
+                    <label for="hotelFiltroAnimal">Animal</label>
+                    <input id="hotelFiltroAnimal" placeholder="Buscar por nome do animal" />
+                </div>
+
+                <div class="field">
+                    <label for="hotelFiltroEntrada">Entrada</label>
+                    <input type="date" id="hotelFiltroEntrada" />
+                </div>
+
+                <div class="field">
+                    <label for="hotelFiltroSaida">Saída</label>
+                    <input type="date" id="hotelFiltroSaida" />
+                </div>
+
+                <div class="field">
+                    <label for="hotelFiltroTransporte">Busca / entrega</label>
+                    <select id="hotelFiltroTransporte">
+                        <option value="">Todos</option>
+                        <option value="traz">Vai trazer</option>
+                        <option value="buscar">Ir buscar</option>
+                    </select>
+                </div>
+
+                <div class="field actions-field">
+                    <label>&nbsp;</label>
+                    <div class="actions">
+                        <button id="hotelFiltrarBtn" class="btn">
+                            <i class="bx bx-search"></i> Filtrar
+                        </button>
+                        <button id="hotelLimparFiltroBtn" class="btn btn-light">
+                            <i class="bx bx-eraser"></i> Limpar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Cadastro de hospedagem</h2>
+                    <p class="card-subtitle">Estrutura pronta para salvar no Firebase e também reaproveitar no link de agendamento.</p>
+                </div>
+                <div class="card-body">
+                    <input type="hidden" id="hotelEditId" />
+
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="hotelTutorNome">Nome do tutor</label>
+                            <input id="hotelTutorNome" placeholder="Nome completo do tutor" />
+                        </div>
+
+                        <div class="field">
+                            <label for="hotelAnimalNome">Nome do animal</label>
+                            <input id="hotelAnimalNome" placeholder="Nome do pet" />
+                        </div>
+
+                        <div class="field">
+                            <label for="hotelEndereco">Endereço</label>
+                            <input id="hotelEndereco" placeholder="Rua, número, bairro..." />
+                        </div>
+
+                        <div class="field">
+                            <label for="hotelContato">Telefone para contato</label>
+                            <input id="hotelContato" placeholder="(00) 00000-0000" />
+                        </div>
+
+                        <div class="field">
+                            <label for="hotelDataEntrada">Data de entrada</label>
+                            <input type="date" id="hotelDataEntrada" />
+                        </div>
+
+                        <div class="field">
+                            <label for="hotelDataSaida">Data de saída</label>
+                            <input type="date" id="hotelDataSaida" />
+                        </div>
+
+                        <div class="field">
+                            <label for="hotelFormaChegada">Chegada</label>
+                            <select id="hotelFormaChegada">
+                                <option value="">Selecione</option>
+                                <option value="traz">Tutor vai trazer</option>
+                                <option value="buscar">Pet shop vai buscar</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="hotelStatus">Status da hospedagem</label>
+                            <select id="hotelStatus">
+                                <option value="reserva">Reserva</option>
+                                <option value="confirmado">Confirmado</option>
+                                <option value="hospedado">Hospedado</option>
+                                <option value="finalizado">Finalizado</option>
+                                <option value="cancelado">Cancelado</option>
+                            </select>
+                        </div>
+
+                        <div class="field" style="grid-column: 1 / -1;">
+                            <label for="hotelObs">Observações</label>
+                            <textarea id="hotelObs" rows="4" placeholder="Medicamentos, alimentação, porte, comportamento, observações gerais..."></textarea>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                        <button id="hotelSalvarBtn" class="btn btn-edit">
+                            <i class="bx bx-save"></i> Salvar hospedagem
+                        </button>
+                        <button id="hotelLimparBtn" class="btn btn-light">
+                            <i class="bx bx-eraser"></i> Limpar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:14px;">
+                <div class="card-header">
+                    <h2>Hospedagens cadastradas</h2>
+                </div>
+                <div class="card-body table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Tutor</th>
+                                <th>Animal</th>
+                                <th>Contato</th>
+                                <th>Entrada</th>
+                                <th>Saída</th>
+                                <th>Chegada</th>
+                                <th>Status</th>
+                                <th style="width:120px;text-align:right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hotelTbody">
+                            <tr>
+                                <td colspan="8" class="loading-row">Carregando hospedagens...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MAIN: Busca / Entrega -->
+    <main id="buscaentregaMain" class="page-main hidden-block">
+        <section class="section">
+            <header class="section-header">
+                <h1>Busca / Entrega</h1>
+                <p>Cadastre rotas de coleta e entrega, acompanhe os status e deixe a base pronta para a agenda do motorista.</p>
+            </header>
+
+            <div class="toolbar">
+                <div class="field">
+                    <label for="beFiltroCliente">Cliente</label>
+                    <input id="beFiltroCliente" placeholder="Buscar por nome do cliente" />
+                </div>
+
+                <div class="field">
+                    <label for="beFiltroData">Data</label>
+                    <input type="date" id="beFiltroData" />
+                </div>
+
+                <div class="field">
+                    <label for="beFiltroStatus">Status</label>
+                    <select id="beFiltroStatus">
+                        <option value="">Todos</option>
+                        <option value="busca">Busca</option>
+                        <option value="no-local">No local</option>
+                        <option value="saiu-para-entrega">Saiu para entrega</option>
+                        <option value="entregue">Entregue</option>
+                    </select>
+                </div>
+
+                <div class="field actions-field">
+                    <label>&nbsp;</label>
+                    <div class="actions">
+                        <button id="beFiltrarBtn" class="btn">
+                            <i class="bx bx-search"></i> Filtrar
+                        </button>
+                        <button id="beLimparFiltroBtn" class="btn btn-light">
+                            <i class="bx bx-eraser"></i> Limpar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Cadastro de busca / entrega</h2>
+                    <p class="card-subtitle">Com os mesmos status que serão usados depois pelo motorista e no filtro do administrativo.</p>
+                </div>
+                <div class="card-body">
+                    <input type="hidden" id="beEditId" />
+
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="beNome">Nome do cliente</label>
+                            <input id="beNome" placeholder="Nome do tutor / cliente" />
+                        </div>
+
+                        <div class="field">
+                            <label for="beEndereco">Endereço</label>
+                            <input id="beEndereco" placeholder="Rua, número, bairro..." />
+                        </div>
+
+                        <div class="field">
+                            <label for="beContato">Contato</label>
+                            <input id="beContato" placeholder="(00) 00000-0000" />
+                        </div>
+
+                        <div class="field">
+                            <label for="beDataBusca">Data da busca</label>
+                            <input type="date" id="beDataBusca" />
+                        </div>
+
+                        <div class="field">
+                            <label for="beHoraBusca">Horário da busca</label>
+                            <input type="time" id="beHoraBusca" />
+                        </div>
+
+                        <div class="field">
+                            <label for="beDataEntrega">Data da entrega</label>
+                            <input type="date" id="beDataEntrega" />
+                        </div>
+
+                        <div class="field">
+                            <label for="beHoraEntrega">Horário da entrega</label>
+                            <input type="time" id="beHoraEntrega" />
+                        </div>
+
+                        <div class="field">
+                            <label for="beStatus">Status</label>
+                            <select id="beStatus">
+                                <option value="busca">Busca</option>
+                                <option value="no-local">No local</option>
+                                <option value="saiu-para-entrega">Saiu para entrega</option>
+                                <option value="entregue">Entregue</option>
+                            </select>
+                        </div>
+
+                        <div class="field" style="grid-column: 1 / -1;">
+                            <label for="beObs">Observações</label>
+                            <textarea id="beObs" rows="4" placeholder="Referência do local, instruções da portaria, particularidades da entrega, observações gerais..."></textarea>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                        <button id="beSalvarBtn" class="btn btn-edit">
+                            <i class="bx bx-save"></i> Salvar rota
+                        </button>
+                        <button id="beLimparBtn" class="btn btn-light">
+                            <i class="bx bx-eraser"></i> Limpar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:14px;">
+                <div class="card-header">
+                    <h2>Rotas cadastradas</h2>
+                </div>
+                <div class="card-body table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Contato</th>
+                                <th>Busca</th>
+                                <th>Entrega</th>
+                                <th>Status</th>
+                                <th>Obs</th>
+                                <th style="width:120px;text-align:right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="beTbody">
+                            <tr>
+                                <td colspan="7" class="loading-row">Carregando rotas...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
 
     <!-- MAIN: Configurações -->
     <main id="configMain" class="page-main hidden-block">

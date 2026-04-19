@@ -40,7 +40,7 @@ import { initConfiguracoesTab } from "./configuracoes.js";
 
 /* ========= Firebase ========= */
 const firebaseConfig = {
-    apiKey: "AIzaSyCmjtUsxKgXQd35xp2gk4Ap0QlYmGWEGYI",
+  apiKey: "AIzaSyCmjtUsxKgXQd35xp2gk4Ap0QlYmGWEGYI",
   authDomain: "petshop-90f21.firebaseapp.com",
   projectId: "petshop-90f21",
   storageBucket: "petshop-90f21.firebasestorage.app",
@@ -265,6 +265,9 @@ export const state = {
   allClients: [],
   pdvProducts: [],
   reportCache: [],
+  // ✅ NOVO: apoio futuro para as novas abas
+  hotelzinhoItems: [],
+  buscaEntregaItems: [],
   charts: {
     reportsChartInstance: null,
     reportsProfChartInstance: null,
@@ -314,6 +317,10 @@ export const cfgExcecaoDoc = (ymd) => doc(db, "config", "excecoes", "dias", Stri
 // ✅ Collections para Gestão/Despesas
 export const COL_DESPESAS = collection(db, "despesas");
 export const COL_VENDAS = collection(db, "vendas");
+
+// ✅ NOVO: Collections das novas abas
+export const COL_HOTELZINHO = collection(db, "hotelzinho");
+export const COL_BUSCA_ENTREGA = collection(db, "busca_entrega");
 
 /* ========= Profissionais helpers ========= */
 export function getProfByColecao(colecao) {
@@ -562,6 +569,17 @@ function setDefaultDates() {
   const expenseDate = $("#expenseDate");
   const expData = $("#expData");
 
+  // ✅ NOVO: Hotelzinho (IDs reais do HTML)
+  const hotelDataEntrada = $("#hotelDataEntrada");
+  const hotelDataSaida = $("#hotelDataSaida");
+  const hotelFiltroEntrada = $("#hotelFiltroEntrada");
+  const hotelFiltroSaida = $("#hotelFiltroSaida");
+
+  // ✅ NOVO: Busca / Entrega (IDs reais do HTML)
+  const beDataBusca = $("#beDataBusca");
+  const beDataEntrega = $("#beDataEntrega");
+  const beFiltroData = $("#beFiltroData");
+
   const hoje = new Date();
   const y = hoje.getFullYear();
   const m = pad2(hoje.getMonth() + 1);
@@ -575,6 +593,31 @@ function setDefaultDates() {
 
   if (expenseDate && !expenseDate.value) expenseDate.value = today;
   if (expData && !expData.value) expData.value = today;
+
+  // ✅ datas padrão das novas abas
+  if (hotelDataEntrada && !hotelDataEntrada.value) hotelDataEntrada.value = today;
+  if (hotelDataSaida && !hotelDataSaida.value) hotelDataSaida.value = today;
+  if (hotelFiltroEntrada && !hotelFiltroEntrada.value) hotelFiltroEntrada.value = today;
+  if (hotelFiltroSaida && !hotelFiltroSaida.value) hotelFiltroSaida.value = today;
+
+  if (beDataBusca && !beDataBusca.value) beDataBusca.value = today;
+  if (beDataEntrega && !beDataEntrega.value) beDataEntrega.value = today;
+  if (beFiltroData && !beFiltroData.value) beFiltroData.value = today;
+}
+
+async function initExtraTabs() {
+  try {
+    // ✅ carrega os módulos extras sem quebrar o resto e sem circular import
+    await import("./hotelzinho.js");
+  } catch (error) {
+    console.error("Erro ao carregar hotelzinho.js:", error);
+  }
+
+  try {
+    await import("./buscaentrega.js");
+  } catch (error) {
+    console.error("Erro ao carregar buscaentrega.js:", error);
+  }
 }
 
 async function init() {
@@ -603,6 +646,9 @@ async function init() {
   initClientesTab();
   initPdvTab();
   initConfiguracoesTab();
+
+  // ✅ NOVO: inicia as abas extras
+  await initExtraTabs();
 
   showTab("agenda");
 }
