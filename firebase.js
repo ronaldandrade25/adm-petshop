@@ -37,6 +37,7 @@ import { initRelatoriosTab } from "./relatorios.js";
 import { initClientesTab } from "./clientes.js";
 import { initPdvTab } from "./pdv.js";
 import { initConfiguracoesTab } from "./configuracoes.js";
+import { initLinksTab } from "./links.js";
 
 /* ========= Firebase ========= */
 const firebaseConfig = {
@@ -646,6 +647,7 @@ async function init() {
   initClientesTab();
   initPdvTab();
   initConfiguracoesTab();
+  initLinksTab();
 
   // ✅ NOVO: inicia as abas extras
   await initExtraTabs();

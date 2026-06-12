@@ -1011,6 +1011,22 @@ body {
   opacity: 0.78;
 }
 
+/* ===== Aba Link ===== */
+.link-box {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid rgba(244, 124, 44, 0.18);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.link-box .link-url {
+  word-break: break-all;
+  font-size: 0.95rem;
+  color: #4b352a;
+}
+
 /* ===== Modal de seleção de serviços ===== */
 .servicos-modal-overlay {
   position: fixed;

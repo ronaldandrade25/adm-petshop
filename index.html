@@ -23,6 +23,9 @@
     <!-- Overlay Mobile -->
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
+    <!-- Notificações -->
+    <div id="notification-container"></div>
+
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
 
@@ -69,6 +72,10 @@
 
             <button type="button" class="tab-btn" data-tab="config">
                 <i class="bx bx-cog"></i> Configurações
+            </button>
+
+            <button type="button" class="tab-btn" data-tab="link">
+                <i class="bx bx-link"></i> Link
             </button>
 
         </nav>
@@ -118,6 +125,9 @@
                     </button>
                     <button type="button" class="tab-btn" data-tab="config">
                         <i class="bx bx-cog"></i> Configurações
+                    </button>
+                    <button type="button" class="tab-btn" data-tab="link">
+                        <i class="bx bx-link"></i> Link
                     </button>
                 </div>
             </nav>
@@ -1272,6 +1282,56 @@
                     </div>
                 </div>
 
+            </div>
+        </section>
+    </main>
+
+    <!-- MAIN: Link -->
+    <main id="linkMain" class="page-main hidden-block">
+        <section class="section">
+            <header class="section-header">
+                <h1>Link</h1>
+                <p>Links rápidos do sistema para compartilhar com tutores e equipe.</p>
+            </header>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="bx bx-calendar-check"></i> Site de agendamento</h2>
+                    <p class="card-subtitle">Página onde os tutores podem agendar atendimentos.</p>
+                </div>
+                <div class="card-body">
+                    <div class="link-box">
+                        <span class="link-url">https://site-petshop-vt.vercel.app/</span>
+                    </div>
+                    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                        <button type="button" class="btn btn-light" data-copy-link="https://site-petshop-vt.vercel.app/">
+                            <i class="bx bx-copy"></i> Copiar link
+                        </button>
+                        <a href="https://site-petshop-vt.vercel.app/" target="_blank" rel="noopener" class="btn btn-edit">
+                            <i class="bx bx-link-external"></i> Seguir link
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="bx bx-car"></i> Busca / Entrega (motorista)</h2>
+                    <p class="card-subtitle">Página com as rotas de busca e entrega para o motorista.</p>
+                </div>
+                <div class="card-body">
+                    <div class="link-box">
+                        <span class="link-url">https://buscaentrega-petshop.vercel.app/</span>
+                    </div>
+                    <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                        <button type="button" class="btn btn-light" data-copy-link="https://buscaentrega-petshop.vercel.app/">
+                            <i class="bx bx-copy"></i> Copiar link
+                        </button>
+                        <a href="https://buscaentrega-petshop.vercel.app/" target="_blank" rel="noopener" class="btn btn-edit">
+                            <i class="bx bx-link-external"></i> Seguir link
+                        </a>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
