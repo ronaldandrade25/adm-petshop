@@ -69,8 +69,6 @@ export function initConfiguracoesTab() {
     const profCancelarEdicaoBtn = await waitEl("#profCancelarEdicao");
     const profTbody = await waitEl("#profTbody");
 
-    // ✅ URL continua existindo, mas agora é opcional (pode salvar sem)
-    const profFotoUrlInput = await waitEl("#profFotoUrl");
 
     // ===== Serviços =====
     const svcNomeInput = await waitEl("#svcNome");
@@ -98,20 +96,12 @@ export function initConfiguracoesTab() {
       return String(wpp || "").trim().replace(/\D+/g, "");
     }
 
-    function normalizeUrl(url) {
-      const u = String(url || "").trim();
-      if (!u) return "";
-      if (u.startsWith("data:image")) return "";
-      if (!/^https?:\/\//i.test(u)) return "";
-      return u;
-    }
-
     // Lê o arquivo, reduz (máx. 320px) e devolve um data URL JPEG pequeno (~20-40 KB),
     // que cabe folgado no limite de 1 MB do documento do Firestore.
     function fileToSmallDataUrl(file, maxSide = 320, quality = 0.82) {
       return new Promise((resolve, reject) => {
         if (!file) return resolve("");
-        if (!/^image//i.test(file.type)) return reject(new Error("Selecione um arquivo de imagem."));
+        if (!file.type.startsWith("image/")) return reject(new Error("Selecione um arquivo de imagem."));
         const reader = new FileReader();
         reader.onerror = () => reject(new Error("Não foi possível ler a imagem."));
         reader.onload = () => {
@@ -136,11 +126,10 @@ export function initConfiguracoesTab() {
       });
     }
 
-    // Arquivo escolhido tem prioridade; senão usa a URL digitada (opcional).
-    async function resolveFoto(fileInput, urlValue) {
+    // Foto somente por arquivo (sem URL e sem Storage). Vazio = não altera a foto.
+    async function resolveFoto(fileInput) {
       const file = fileInput?.files?.[0];
-      if (file) return await fileToSmallDataUrl(file);
-      return normalizeUrl(urlValue);
+      return file ? await fileToSmallDataUrl(file) : "";
     }
 
     function normalizeTimeOrEmpty(t) {
@@ -215,7 +204,6 @@ export function initConfiguracoesTab() {
 
       if (profFotoFileInput) profFotoFileInput.value = "";
 
-      if (profFotoUrlInput) profFotoUrlInput.value = "";
       if (profSalvarBtn) profSalvarBtn.textContent = "Salvar profissional";
     }
 
@@ -449,8 +437,7 @@ export function initConfiguracoesTab() {
               </div>
 
               <input id="mProfFoto" type="file" accept="image/*" />
-              <small class="muted">Escolha um arquivo de imagem (opcional). Ele é reduzido e salvo automaticamente.</small>
-              <input id="mProfFotoUrl" value="${/^https?:/i.test(fotoUrl) ? escapeHtml(fotoUrl) : ""}" placeholder="ou cole uma URL https (opcional)" style="margin-top:8px" />
+              <small class="muted">Escolha uma imagem (opcional). Ela é reduzida e salva automaticamente. Sem arquivo, a foto atual é mantida.</small>
             </div>
 
             <div class="field">
@@ -473,7 +460,7 @@ export function initConfiguracoesTab() {
                 const nomeNew = ($("#mProfNome")?.value || "").trim();
                 const wppNew = normalizeWpp($("#mProfWpp")?.value || "");
                 const ativoNew = !!$("#mProfAtivo")?.checked;
-                const urlTyped = await resolveFoto($("#mProfFoto"), $("#mProfFotoUrl")?.value || "");
+                const urlTyped = await resolveFoto($("#mProfFoto"));
 
                 if (!nomeNew) {
                   showNotification("Informe o nome do profissional.", "error");
@@ -576,7 +563,7 @@ export function initConfiguracoesTab() {
         const nome = (profNomeInput?.value || "").trim();
         const whatsapp = normalizeWpp(profWppInput?.value || "");
         const ativo = !!profAtivoInput?.checked;
-        const urlTyped = await resolveFoto(profFotoFileInput, profFotoUrlInput?.value || "");
+        const urlTyped = await resolveFoto(profFotoFileInput);
 
         if (!nome) return showNotification("Informe o nome do profissional.", "error");
 
