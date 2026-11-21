@@ -20,6 +20,26 @@
 
 <body>
 
+    <!-- LOGIN (Firebase Authentication - e-mail/senha) -->
+    <div id="loginScreen" class="login-screen" hidden>
+        <form id="loginForm" class="login-card" autocomplete="on" novalidate>
+            <img src="./assets/ra-petshop.png" alt="Logo do Pet Shop" class="login-logo" />
+            <h1>RA Pet Shop</h1>
+            <p class="login-sub">Painel Administrativo</p>
+
+            <label for="loginEmail">E-mail</label>
+            <input id="loginEmail" type="email" autocomplete="username" placeholder="seu@email.com" required />
+
+            <label for="loginSenha">Senha</label>
+            <input id="loginSenha" type="password" autocomplete="current-password" placeholder="Sua senha" required />
+
+            <div id="loginError" class="login-error" role="alert" hidden></div>
+
+            <button type="submit" id="loginBtn" class="login-submit">Entrar</button>
+            <button type="button" id="loginReset" class="login-link">Esqueci minha senha</button>
+        </form>
+    </div>
+
     <!-- Overlay Mobile -->
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
@@ -88,6 +108,10 @@
         </button>
 
         <h2>Painel Administrativo</h2>
+
+        <button type="button" id="btnLogout" class="logout-btn" title="Sair" hidden>
+            <i class="bx bx-log-out"></i> Sair
+        </button>
     </header>
 
     <!-- CONTAINER -->
@@ -1174,7 +1198,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h2>Profissionais</h2>
-                        <p class="card-subtitle">Cadastre e edite profissionais (nome, WhatsApp, ativo, foto URL opcional).</p>
+                        <p class="card-subtitle">Cadastre e edite profissionais (nome, WhatsApp, ativo, foto por arquivo).</p>
                     </div>
                     <div class="card-body">
                         <input id="profEditId" type="hidden" />
@@ -1191,13 +1215,13 @@
                             </div>
 
                             <div class="field">
-                                <label for="profFotoUrl">Foto (URL opcional)</label>
-                                <input id="profFotoUrl" placeholder="https://..." />
+                                <label for="profFotoFile">Foto (arquivo)</label>
+                                <input id="profFotoFile" type="file" accept="image/*" />
                             </div>
 
                             <div class="field">
-                                <label for="profFotoFile">Foto (arquivo)</label>
-                                <input id="profFotoFile" type="file" accept="image/*" />
+                                <label for="profFotoUrl">Ou cole a URL da foto (opcional)</label>
+                                <input id="profFotoUrl" placeholder="https://..." />
                             </div>
 
                             <div class="field">

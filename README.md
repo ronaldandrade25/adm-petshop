@@ -5,7 +5,7 @@ Painel administrativo (**gestão e agenda**) para um **pet shop**.
 > **Importante:** este projeto é apenas a parte de **gestão e agenda**. O **site de agendamento** (usado pelos clientes) fica em **outra pasta/projeto**. Os dois se comunicam através do **mesmo projeto Firebase (Firestore)**: ao configurar este painel e o site de agendamento com o **mesmo `firebaseConfig`**, tudo o que o cliente agenda aparece aqui em tempo real, e tudo o que é configurado aqui (profissionais, serviços, horários, bloqueios) é lido pelo site.
 
 ```
- Site de agendamento  <──►  Firebase (Firestore + Storage)  <──►  Este painel (ADM)
+ Site de agendamento  <──►  Firebase (Firestore)  <──►  Este painel (ADM)
    (outra pasta)              mesmo projeto / mesmas coleções
 ```
 
@@ -23,7 +23,7 @@ Painel administrativo (**gestão e agenda**) para um **pet shop**.
 ## Tecnologias
 
 - HTML, CSS e JavaScript puro (ES Modules), sem build e sem `npm install`
-- Firebase **Firestore** e **Storage** (SDK 10.12.2 via CDN `gstatic`)
+- Firebase **Firestore** e **Authentication** (SDK 10.12.2 via CDN `gstatic`)
 - Chart.js (gráficos dos relatórios) e Boxicons (ícones), via CDN
 - Firebase Authentication (e-mail/senha) para o login do administrador (ver passo 5)
 
@@ -48,7 +48,7 @@ Painel administrativo (**gestão e agenda**) para um **pet shop**.
 ### 1. Criar/usar o projeto Firebase
 1. Acesse o [Firebase Console](https://console.firebase.google.com/) e crie um projeto (ou use o existente).
 2. Ative o **Firestore Database** (*Build → Firestore Database → Create database*).
-3. Ative o **Storage** (usado no upload de foto do profissional).
+3. O **Storage não é necessário**: a foto do profissional é escolhida como arquivo, reduzida no navegador (máx. 320 px, JPEG) e salva no próprio documento do Firestore (`profissionais.fotoUrl`).
 4. Em *Project settings → Your apps*, registre um app **Web (`</>`)** e copie o objeto `firebaseConfig`.
 
 ### 2. Colar a configuração neste painel
@@ -65,7 +65,7 @@ const firebaseConfig = {
 };
 ```
 
-Projeto Firebase atualmente configurado: **`petshop-90f21`**.
+Projeto Firebase atualmente configurado: **`operacao50k`**.
 
 ### 3. Sincronizar com o site de agendamento
 No projeto do **site de agendamento** (outra pasta), use **exatamente o mesmo `firebaseConfig`** e as **mesmas coleções**. É essa configuração em comum que faz os dois sistemas se comunicarem.
@@ -117,11 +117,11 @@ onAuthStateChanged(auth, (user) => {
 await signOut(auth);
 ```
 
-> **Nota:** a versão atual deste painel abre direto, sem tela de login. A integração acima descreve como ativar o Authentication; a tela de login ainda precisa ser implementada no `index.html`/`firebase.js`. O site de agendamento **não** precisa de login do cliente, apenas o painel.
+> **Nota:** o painel agora tem **tela de login** (e-mail/senha) implementada em `index.html`/`firebase.js`: ele só carrega os dados depois de logar, e há botão **Sair** e "Esqueci minha senha". A constante opcional `ALLOWED_EMAIL` em `firebase.js` limita a interface a um único e-mail. O site de agendamento **não** precisa de login do cliente, apenas o painel.
 
 #### O e-mail cadastrado também precisa estar nas regras
 
-Criar o usuário no Authentication **não basta**. O login só protege os dados de verdade se o **mesmo e-mail** estiver nas **regras do Firestore e do Storage**. Sem isso, qualquer pessoa que conheça o `firebaseConfig` (ele fica público no navegador) consegue ler/gravar direto no banco, sem passar pelo painel.
+Criar o usuário no Authentication **não basta**. O login só protege os dados de verdade se o **mesmo e-mail** estiver nas **regras do Firestore**. Sem isso, qualquer pessoa que conheça o `firebaseConfig` (ele fica público no navegador) consegue ler/gravar direto no banco, sem passar pelo painel.
 
 Exemplo de regras do **Firestore** (troque pelo e-mail cadastrado). O site de agendamento continua funcionando: lê profissionais, serviços e horários, e só **cria** agendamentos:
 
@@ -153,20 +153,6 @@ service cloud.firestore {
 }
 ```
 
-Exemplo do **Storage** (upload de foto do profissional):
-
-```
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null
-        && request.auth.token.email == "seu-email@exemplo.com";
-    }
-  }
-}
-```
 
 > Se o e-mail do admin não tiver o e-mail verificado, remova a linha `email_verified == true`. Ajuste a regra de `create` do site de agendamento conforme os campos que ele grava.
 
@@ -182,8 +168,42 @@ const ALLOWED_EMAIL = "seu-email@exemplo.com";
 
 Isso **não é segurança**, apenas esconde a tela para quem tentar entrar com outro e-mail. A segurança real está nas regras. Resumo: o e-mail precisa estar **no Authentication** (usuário), **nas regras** (obrigatório) e, se quiser o bloqueio na interface, **no código** (opcional).
 
-### 6. Regras de segurança (Firestore e Storage)
-Enquanto o painel **não usar autenticação**, as regras precisam permitir leitura/escrita para ele funcionar. Depois de implementar o login (passo 5), restrinja as regras a usuários autenticados nas áreas de gestão, mantendo para o site de agendamento apenas o acesso necessário (ler profissionais/serviços/horários e criar agendamentos).
+### 6. Regras de segurança (Firestore)
+As regras prontas para colar (Firestore) estão em **[`regras.md`](regras.md)**. Elas atendem aos 3 sistemas que usam o mesmo projeto Firebase (`operacao50k`).
+
+**Como publicar**
+1. **Authentication → Sign-in method**: ative **E-mail/senha**.
+2. **Authentication → Users → Add user**: cadastre o e-mail e a senha do administrador.
+3. **Authentication → Settings → Authorized domains**: adicione o domínio onde o ADM está publicado (`localhost` já vem).
+4. No `regras.md`, troque `SEU_EMAIL_ADMIN@exemplo.com` pelo e-mail do passo 2, em **todas** as ocorrências.
+5. Cole as regras em *Firestore Database → Regras* e clique em **Publicar**.
+
+> Não use `email_verified == true`: usuários criados pelo Console nascem **não verificados** e o ADM ficaria sem acesso (o exemplo do passo 5 acima, com essa linha, deve ser ajustado).
+
+**Quem acessa o quê**
+
+| Sistema | Login? | Acesso no Firestore |
+|---|---|---|
+| ADM (`adm-petshop`) | Sim (e-mail/senha) | Lê e grava tudo |
+| Site de agendamento (`site-petshop-vt`) | Não | Lê `profissionais`, `servicos`, `config/*`, `excecoes`; em `reservas_*` lê, cria, altera e apaga (reagendar) |
+| Busca e entrega (`buscaentrega-petshop`) | Não | Lê e atualiza `busca_entrega` |
+
+| Coleção / documento | Quem acessa |
+|---|---|
+| `profissionais` (+ subcoleção `excecoes`), `servicos`, `config/*`, `excecoes/{ymd}` | ADM escreve · site lê |
+| `reservas_<profissional>` | Site cria/lê/reagenda · ADM gerencia |
+| `busca_entrega` | ADM cria/apaga · motorista lê/atualiza |
+| `raclub_clients`, `raclub_payments`, `produtos`, `pdv_sales`, `vendas`, `despesas`, `rabarbearia_expenses`, `hotelzinho` | Só ADM |
+
+Se criar uma coleção de agendamento que **não** comece com `reservas_`, ajuste a regra `match /{col}/{id}`.
+
+**Por que `reservas_*` e `busca_entrega` ficam abertas:** o site de agendamento e o app do motorista não têm login, então precisam ler/gravar direto no Firestore. Isso expõe nome e telefone dos agendamentos a quem conhecer o `firebaseConfig`. Fechar isso exigiria Cloud Functions ou login do cliente.
+
+**Teste depois de publicar**
+1. Abra o ADM: deve aparecer a tela de login; entre com o e-mail/senha cadastrados.
+2. Faça um agendamento pelo site: deve aparecer na Agenda do ADM.
+3. Abra o app do motorista: deve listar e atualizar `busca_entrega`.
+4. Sem login, tente ler `pdv_sales` pelo console do navegador: deve dar `permission-denied`.
 
 ## Como executar
 
@@ -200,10 +220,10 @@ Ou use a extensão **Live Server** do VS Code e abra `index.html`. Para publicar
 
 ## Checklist de integração
 
-- [ ] Firestore e Storage ativados no mesmo projeto Firebase
+- [ ] Firestore e Authentication ativados no mesmo projeto Firebase
 - [ ] `firebaseConfig` colado em `firebase.js` deste painel
 - [ ] `firebaseConfig` **idêntico** no site de agendamento
 - [ ] Authentication com **E-mail/senha** ativado e usuário administrador cadastrado
-- [ ] E-mail do administrador colocado nas **regras** do Firestore e do Storage
+- [ ] E-mail do administrador colocado nas **regras** do Firestore
 - [ ] Profissionais e serviços cadastrados na aba de Configurações
 - [ ] Teste: fazer um agendamento pelo site e conferir se aparece na Agenda deste painel

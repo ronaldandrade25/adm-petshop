@@ -60,7 +60,7 @@ export function initConfiguracoesTab() {
     const profEditId = await waitEl("#profEditId");
     const profNomeInput = await waitEl("#profNome");
 
-    // ✅ não usamos mais arquivo (se existir no HTML antigo, escondemos)
+    // ✅ Foto por arquivo: reduzida no navegador e salva no próprio Firestore (sem Storage)
     const profFotoFileInput = await waitEl("#profFotoFile");
 
     const profWppInput = await waitEl("#profWpp");
@@ -104,6 +104,43 @@ export function initConfiguracoesTab() {
       if (u.startsWith("data:image")) return "";
       if (!/^https?:\/\//i.test(u)) return "";
       return u;
+    }
+
+    // Lê o arquivo, reduz (máx. 320px) e devolve um data URL JPEG pequeno (~20-40 KB),
+    // que cabe folgado no limite de 1 MB do documento do Firestore.
+    function fileToSmallDataUrl(file, maxSide = 320, quality = 0.82) {
+      return new Promise((resolve, reject) => {
+        if (!file) return resolve("");
+        if (!/^image//i.test(file.type)) return reject(new Error("Selecione um arquivo de imagem."));
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Não foi possível ler a imagem."));
+        reader.onload = () => {
+          const img = new Image();
+          img.onerror = () => reject(new Error("Imagem inválida."));
+          img.onload = () => {
+            const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+            const w = Math.max(1, Math.round(img.width * scale));
+            const h = Math.max(1, Math.round(img.height * scale));
+            const canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL("image/jpeg", quality));
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Arquivo escolhido tem prioridade; senão usa a URL digitada (opcional).
+    async function resolveFoto(fileInput, urlValue) {
+      const file = fileInput?.files?.[0];
+      if (file) return await fileToSmallDataUrl(file);
+      return normalizeUrl(urlValue);
     }
 
     function normalizeTimeOrEmpty(t) {
@@ -176,28 +213,14 @@ export function initConfiguracoesTab() {
       if (profWppInput) profWppInput.value = "";
       if (profAtivoInput) profAtivoInput.checked = true;
 
-      if (profFotoFileInput) {
-        profFotoFileInput.value = "";
-        const field = profFotoFileInput.closest(".field");
-        if (field) field.style.display = "none";
-      }
+      if (profFotoFileInput) profFotoFileInput.value = "";
 
       if (profFotoUrlInput) profFotoUrlInput.value = "";
       if (profSalvarBtn) profSalvarBtn.textContent = "Salvar profissional";
     }
 
-    function hideFileInputsEverywhere() {
-      if (profFotoFileInput) {
-        const field = profFotoFileInput.closest(".field");
-        if (field) field.style.display = "none";
-      }
-
-      const mFile = document.getElementById("mProfFoto");
-      if (mFile) {
-        const field = mFile.closest(".field");
-        if (field) field.style.display = "none";
-      }
-    }
+    // (campos de arquivo agora ficam visíveis: foto é enviada como arquivo)
+    function hideFileInputsEverywhere() {}
 
     // =========================
     // Exceções por escopo
@@ -425,8 +448,9 @@ export function initConfiguracoesTab() {
                 }
               </div>
 
-              <input id="mProfFotoUrl" value="${escapeHtml(fotoUrl)}" placeholder="https://link-da-foto.jpg (opcional)" />
-              <small class="muted">A foto é opcional. Se quiser, cole uma URL https.</small>
+              <input id="mProfFoto" type="file" accept="image/*" />
+              <small class="muted">Escolha um arquivo de imagem (opcional). Ele é reduzido e salvo automaticamente.</small>
+              <input id="mProfFotoUrl" value="${/^https?:/i.test(fotoUrl) ? escapeHtml(fotoUrl) : ""}" placeholder="ou cole uma URL https (opcional)" style="margin-top:8px" />
             </div>
 
             <div class="field">
@@ -449,7 +473,7 @@ export function initConfiguracoesTab() {
                 const nomeNew = ($("#mProfNome")?.value || "").trim();
                 const wppNew = normalizeWpp($("#mProfWpp")?.value || "");
                 const ativoNew = !!$("#mProfAtivo")?.checked;
-                const urlTyped = normalizeUrl($("#mProfFotoUrl")?.value || "");
+                const urlTyped = await resolveFoto($("#mProfFoto"), $("#mProfFotoUrl")?.value || "");
 
                 if (!nomeNew) {
                   showNotification("Informe o nome do profissional.", "error");
@@ -552,7 +576,7 @@ export function initConfiguracoesTab() {
         const nome = (profNomeInput?.value || "").trim();
         const whatsapp = normalizeWpp(profWppInput?.value || "");
         const ativo = !!profAtivoInput?.checked;
-        const urlTyped = normalizeUrl(profFotoUrlInput?.value || "");
+        const urlTyped = await resolveFoto(profFotoFileInput, profFotoUrlInput?.value || "");
 
         if (!nome) return showNotification("Informe o nome do profissional.", "error");
 
@@ -601,7 +625,7 @@ export function initConfiguracoesTab() {
       } catch (err) {
         console.error(err);
         if (isPermissionError(err)) showPermissionHint("salvar profissional");
-        else showNotification("Erro ao salvar profissional.", "error");
+        else showNotification(err?.message && !err.code ? err.message : "Erro ao salvar profissional.", "error");
       }
     });
 

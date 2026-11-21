@@ -2007,3 +2007,66 @@ body {
         height: 46px;
     }
 }
+/* ===== Login (Firebase Authentication) ===== */
+.login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--bg-color);
+}
+.login-screen[hidden] { display: none; }
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+  font-family: "Poppins", sans-serif;
+}
+.login-logo { width: 84px; height: 84px; object-fit: contain; margin: 0 auto 4px; }
+.login-card h1 { margin: 0; font-size: 22px; color: var(--secondary-color); }
+.login-sub { margin: 0 0 14px; color: var(--text-muted); font-size: 14px; }
+.login-card label { text-align: left; font-size: 13px; font-weight: 500; color: var(--text); margin-top: 6px; }
+.login-card input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  font: inherit;
+  color: var(--text);
+}
+.login-card input:focus { outline: 2px solid var(--accent); border-color: var(--primary-color); }
+.login-error {
+  background: #fdecea; color: var(--danger);
+  border-radius: var(--radius-md); padding: 10px 12px; font-size: 13px; text-align: left;
+}
+.login-error.ok { background: #e8f5ea; color: #3d7a4a; }
+.login-error[hidden] { display: none; }
+.login-submit {
+  margin-top: 12px; padding: 13px; border: 0; cursor: pointer;
+  border-radius: var(--radius-md); background: var(--primary-color); color: #fff;
+  font: inherit; font-weight: 600;
+}
+.login-submit:hover { background: var(--primary-dark); }
+.login-submit:disabled { opacity: .7; cursor: wait; }
+.login-link { background: none; border: 0; color: var(--primary-dark); cursor: pointer; font: inherit; font-size: 13px; padding: 6px; }
+.logout-btn {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md);
+  background: var(--card-bg); color: var(--text); cursor: pointer; font: inherit; font-size: 14px;
+}
+.logout-btn[hidden] { display: none; }
+body.logged-out .sidebar,
+body.logged-out .topbar,
+body.logged-out .layout { display: none; }

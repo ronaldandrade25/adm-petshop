@@ -1,6 +1,6 @@
 // /js/firebase.js (ESM)
 // ✅ Arquivo "central" com Firebase + Helpers + Modal + Tabs + Estado compartilhado
-// ✅ Sem login / sem Auth Gate
+// ✅ Login com Firebase Authentication (e-mail/senha) + Auth Gate
 // ✅ Importa e inicia as abas (agenda/relatorios/clientes/pdv/config)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -23,13 +23,14 @@ import {
   limit,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ✅ Storage (necessário para upload de foto do profissional)
+// ✅ Authentication (e-mail/senha)
 import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL,
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+  getAuth,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  onAuthStateChanged,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // ✅ Módulos por aba
 import { initAgendaTab } from "./agenda.js";
@@ -41,20 +42,21 @@ import { initLinksTab } from "./links.js";
 
 /* ========= Firebase ========= */
 const firebaseConfig = {
-  apiKey: "AIzaSyCmjtUsxKgXQd35xp2gk4Ap0QlYmGWEGYI",
-  authDomain: "petshop-90f21.firebaseapp.com",
-  projectId: "petshop-90f21",
-  storageBucket: "petshop-90f21.firebasestorage.app",
-  messagingSenderId: "746188747686",
-  appId: "1:746188747686:web:d95433d74e8e4291ff9567"
+   apiKey: "AIzaSyCNCABN6R4yLP8vTVpYSsVyvdwpLlKdrVU",
+  authDomain: "operacao50k.firebaseapp.com",
+  projectId: "operacao50k",
+  storageBucket: "operacao50k.firebasestorage.app",
+  messagingSenderId: "512212492127",
+  appId: "1:512212492127:web:07c6a83ac787e8d79260ea"
 };
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+export const auth = getAuth(app);
 
-// ✅ Storage exports
-export const storage = getStorage(app);
-export { ref, uploadBytes, getDownloadURL };
+// Opcional (só interface): se preencher, só esse e-mail entra no painel.
+// A segurança real está nas regras do Firestore (ver regras.md).
+const ALLOWED_EMAIL = "";
 
 /* ========= Helpers ========= */
 export const $ = (s) => document.querySelector(s);
@@ -237,9 +239,82 @@ export function showTab(tab) {
   });
 }
 
-/* ========= Sem autenticação ========= */
+/* ========= Autenticação ========= */
+// Resolve quando o Firebase restaurou a sessão; retorna o usuário logado (ou null).
 export async function waitForAuth() {
-  return true;
+  await auth.authStateReady();
+  return auth.currentUser;
+}
+
+const isAllowedUser = (user) =>
+  !!user && (!ALLOWED_EMAIL || (user.email || "").toLowerCase() === ALLOWED_EMAIL.toLowerCase());
+
+function authErrorMessage(err) {
+  switch (err?.code) {
+    case "auth/invalid-email": return "E-mail inválido.";
+    case "auth/user-disabled": return "Este usuário está desativado.";
+    case "auth/user-not-found":
+    case "auth/wrong-password":
+    case "auth/invalid-credential": return "E-mail ou senha incorretos.";
+    case "auth/too-many-requests": return "Muitas tentativas. Aguarde um pouco e tente novamente.";
+    case "auth/network-request-failed": return "Sem conexão. Verifique a internet.";
+    case "auth/operation-not-allowed": return "Login por e-mail/senha não está ativado no Firebase.";
+    default: return "Não foi possível entrar. Tente novamente.";
+  }
+}
+
+function setupLogin() {
+  const form = $("#loginForm");
+  const emailEl = $("#loginEmail");
+  const senhaEl = $("#loginSenha");
+  const errEl = $("#loginError");
+  const btn = $("#loginBtn");
+
+  const showErr = (msg, ok = false) => {
+    errEl.textContent = msg || "";
+    errEl.hidden = !msg;
+    errEl.classList.toggle("ok", !!ok);
+  };
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = emailEl.value.trim();
+    const senha = senhaEl.value;
+    if (!email || !senha) return showErr("Informe e-mail e senha.");
+    if (ALLOWED_EMAIL && email.toLowerCase() !== ALLOWED_EMAIL.toLowerCase()) {
+      return showErr("Este e-mail não tem acesso ao painel.");
+    }
+    btn.disabled = true;
+    btn.textContent = "Entrando...";
+    showErr("");
+    try {
+      await signInWithEmailAndPassword(auth, email, senha);
+      senhaEl.value = "";
+    } catch (err) {
+      console.error("Erro no login:", err);
+      showErr(authErrorMessage(err));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Entrar";
+    }
+  });
+
+  $("#loginReset").addEventListener("click", async () => {
+    const email = emailEl.value.trim();
+    if (!email) return showErr("Digite seu e-mail para receber o link de redefinição.");
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showErr("Enviamos um link de redefinição para o seu e-mail.", true);
+    } catch (err) {
+      showErr(authErrorMessage(err));
+    }
+  });
+
+  $("#btnLogout").addEventListener("click", async () => {
+    try { await signOut(auth); } catch (err) { console.error(err); }
+    // recarrega para encerrar listeners e limpar o estado em memória
+    location.reload();
+  });
 }
 
 /* ========= Estado compartilhado ========= */
@@ -621,18 +696,11 @@ async function initExtraTabs() {
   }
 }
 
-async function init() {
-  tabBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const tab = btn.dataset.tab;
-      showTab(tab);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-  });
+let panelStarted = false;
 
-  bindResumoGeralModal();
-
-  await waitForAuth();
+async function startPanel() {
+  if (panelStarted) return;
+  panelStarted = true;
 
   // ✅ AJUSTE:
   // Deixa datas padrão e selects prontos antes de iniciar as abas,
@@ -653,6 +721,42 @@ async function init() {
   await initExtraTabs();
 
   showTab("agenda");
+}
+
+async function init() {
+  tabBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const tab = btn.dataset.tab;
+      showTab(tab);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+
+  bindResumoGeralModal();
+  setupLogin();
+
+  const loginScreen = $("#loginScreen");
+  const logoutBtn = $("#btnLogout");
+
+  // ✅ Auth Gate: o painel só inicia (e só lê o Firestore) com usuário logado
+  onAuthStateChanged(auth, async (user) => {
+    if (isAllowedUser(user)) {
+      document.body.classList.remove("logged-out");
+      loginScreen.hidden = true;
+      logoutBtn.hidden = false;
+      await startPanel();
+    } else {
+      if (user) {
+        await signOut(auth);
+        const errEl = $("#loginError");
+        errEl.textContent = "Este e-mail não tem acesso ao painel.";
+        errEl.hidden = false;
+      }
+      document.body.classList.add("logged-out");
+      loginScreen.hidden = false;
+      logoutBtn.hidden = true;
+    }
+  });
 }
 
 document.addEventListener("DOMContentLoaded", init);
